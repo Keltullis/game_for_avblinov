@@ -3,13 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Клинок Знаний 3D</title>
-<!-- Подключаем Supabase -->
+<title>Лезвие Истины</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Segoe UI',system-ui,sans-serif;color:#fff;user-select:none;touch-action:none}
+  html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Rajdhani','Segoe UI',system-ui,sans-serif;color:#fff;user-select:none;touch-action:none}
   #canvas{display:block;width:100%;height:100%}
+
+  /* ============ HUD ============ */
   #hud{position:fixed;inset:0;pointer-events:none;z-index:10;display:none}
   #hud.show{display:block}
   .hp-wrap{position:absolute;bottom:24px;left:24px;width:280px}
@@ -29,142 +33,204 @@
   #crosshair::before{left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%)}
   #crosshair::after{top:50%;left:0;right:0;height:2px;transform:translateY(-50%)}
 
-  /* Auth */
-  #auth{position:fixed;inset:0;background:radial-gradient(ellipse at center,#1a0a2aee,#000000f5);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px}
-  .auth-box{background:linear-gradient(160deg,#1a0f2c,#241238);border:1px solid #4a2f70;border-radius:20px;padding:36px;max-width:420px;width:100%;box-shadow:0 30px 80px #000}
-  .auth-box h1{font-size:32px;margin-bottom:6px;text-align:center;background:linear-gradient(90deg,#ff2d55,#ffb347);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .auth-box .sub{text-align:center;color:#8a7ba8;font-size:13px;margin-bottom:22px}
-  .tabs{display:flex;gap:8px;margin-bottom:18px;background:#120a20;border-radius:10px;padding:5px}
-  .tab{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;border-radius:7px;color:#8a7ba8;transition:.2s}
-  .tab.active{background:linear-gradient(135deg,#ff2d55,#ff7b00);color:#fff}
-  .auth-box input{width:100%;padding:13px 16px;border-radius:10px;border:1px solid #3a2158;background:#0e0718;color:#fff;font-size:15px;margin-bottom:12px;outline:none;font-family:inherit}
-  .auth-box input:focus{border-color:#ff7b00;box-shadow:0 0 0 3px #ff7b0033}
-  .auth-box button{width:100%;padding:14px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,#ff2d55,#ff7b00);color:#fff;box-shadow:0 10px 26px #ff2d5588;transition:.15s;margin-top:6px}
-  .auth-box button:hover{transform:translateY(-2px)}
-  .auth-error{color:#ff8fa3;font-size:13px;text-align:center;margin-top:10px;min-height:18px}
-  .auth-info{color:#7ee787;font-size:13px;text-align:center;margin-top:10px;min-height:18px}
-  .user-badge{position:fixed;top:16px;left:16px;background:#1a0f2cdd;border:1px solid #4a2f70;border-radius:20px;padding:6px 14px;font-size:12px;color:#c9b8e8;z-index:12;pointer-events:none;display:none;font-weight:600}
+  /* ============ AUTH ============ */
+  #auth{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 30%, rgba(212,165,116,.06) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 60% at 50% 100%, rgba(120,20,40,.15) 0%, transparent 60%),
+      #05030c;
+  }
+  .auth-box{position:relative;background:linear-gradient(170deg,#0e0718 0%,#0a0512 100%);border:1px solid #2a1d3a;border-radius:4px;padding:44px 40px 36px;max-width:400px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,.9),inset 0 1px 0 rgba(212,165,116,.08)}
+  .auth-box::before,.auth-box::after{content:'';position:absolute;width:20px;height:20px;border:1px solid #d4a574;opacity:.55}
+  .auth-box::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+  .auth-box::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+  .auth-emblem{width:36px;height:36px;margin:0 auto 18px;display:block;color:#d4a574;filter:drop-shadow(0 0 12px rgba(212,165,116,.4))}
+  .auth-box h1{font-family:'Cinzel',serif;font-size:22px;text-align:center;color:#f5e8d5;letter-spacing:.22em;font-weight:700;margin-bottom:4px;text-transform:uppercase}
+  .auth-box .sub{text-align:center;color:#8a6535;font-size:11px;letter-spacing:.4em;margin-bottom:30px;text-transform:uppercase;font-weight:600}
+  .tabs{display:flex;margin-bottom:22px;border-bottom:1px solid #2a1d3a;position:relative}
+  .tab{flex:1;padding:12px 6px;text-align:center;font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:.2em;cursor:pointer;color:#5a4a6a;transition:color .2s,background .2s;text-transform:uppercase;position:relative}
+  .tab:hover{color:#a89880}
+  .tab.active{color:#d4a574}
+  .tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:#d4a574;box-shadow:0 0 12px #d4a574}
+  .auth-box input{width:100%;padding:13px 14px;border-radius:2px;border:1px solid #2a1d3a;background:#05030c;color:#f5e8d5;font-size:14px;margin-bottom:10px;outline:none;font-family:'Rajdhani',sans-serif;font-weight:500;letter-spacing:.05em;transition:.2s}
+  .auth-box input::placeholder{color:#4a3d3a;letter-spacing:.08em}
+  .auth-box input:focus{border-color:#8a6535;background:#080412;box-shadow:0 0 0 3px rgba(212,165,116,.08)}
+  .auth-box button{width:100%;padding:14px;border-radius:2px;border:1px solid #8a6535;cursor:pointer;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;background:linear-gradient(180deg,rgba(212,165,116,.14),rgba(212,165,116,.02));color:#f5e8d5;transition:.25s;margin-top:8px;position:relative;overflow:hidden}
+  .auth-box button::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);transform:translateX(-100%);transition:transform .6s}
+  .auth-box button:hover:not(:disabled){border-color:#d4a574;background:linear-gradient(180deg,rgba(212,165,116,.22),rgba(212,165,116,.05));box-shadow:0 0 30px rgba(212,165,116,.15)}
+  .auth-box button:hover:not(:disabled)::after{transform:translateX(100%)}
+  .auth-box button:disabled{opacity:.5;cursor:not-allowed}
+  .auth-error{color:#ff6b85;font-size:12px;text-align:center;margin-top:14px;min-height:16px;letter-spacing:.03em}
+  .auth-info{color:#7ee787;font-size:12px;text-align:center;margin-top:6px;min-height:16px;letter-spacing:.03em}
+  .user-badge{position:fixed;top:16px;left:16px;background:rgba(10,5,18,.85);border:1px solid #2a1d3a;border-radius:2px;padding:6px 14px;font-size:11px;color:#a89880;z-index:12;pointer-events:none;display:none;letter-spacing:.15em;text-transform:uppercase;font-weight:600}
   .user-badge.show{display:block}
-  .user-badge b{color:#ffb347}
+  .user-badge b{color:#d4a574;letter-spacing:.1em}
 
-  /* STORY / OUTRO */
+  /* ============ MENU ============ */
+  #start{position:fixed;inset:0;display:none;z-index:200;overflow:hidden;background:#05030c}
+  #start.show{display:block}
+  #menu-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.7}
+  #menu-vignette{position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      radial-gradient(ellipse 70% 65% at 50% 42%, rgba(8,4,16,.25) 0%, rgba(5,3,12,.72) 60%, rgba(5,3,12,.96) 100%),
+      linear-gradient(180deg, rgba(0,0,0,.55) 0%, transparent 20%, transparent 75%, rgba(0,0,0,.85) 100%);
+  }
+  #menu-content{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;pointer-events:none}
+  #menu-content > *{pointer-events:auto}
+  .menu-top{text-align:center;margin-bottom:38px;animation:menuFadeIn .9s cubic-bezier(.2,.9,.3,1) both}
+  @keyframes menuFadeIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+  .menu-kicker{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.6em;color:#8a6535;text-transform:uppercase;opacity:.9;margin-bottom:22px;padding-left:.6em}
+  .menu-emblem{width:48px;height:48px;margin:0 auto 20px;display:block;color:#d4a574;filter:drop-shadow(0 0 18px rgba(212,165,116,.45))}
+  #start h1{
+    font-family:'Cinzel',serif;
+    font-size:clamp(38px,6.5vw,72px);
+    font-weight:900;letter-spacing:.14em;line-height:1;margin:0;
+    background:linear-gradient(180deg,#f5e8d5 0%,#d4a574 55%,#8a6535 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-align:center;padding-left:.14em;
+    filter:drop-shadow(0 0 40px rgba(212,165,116,.2));
+  }
+  .menu-divider{width:180px;height:1px;margin:22px auto 18px;position:relative;background:linear-gradient(90deg,transparent,rgba(212,165,116,.5) 25%,rgba(212,165,116,.5) 75%,transparent)}
+  .menu-divider::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(45deg);width:5px;height:5px;background:#d4a574;box-shadow:0 0 14px #d4a574;border-radius:1px}
+  .menu-tagline{font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:.35em;color:#8a7560;text-align:center;max-width:460px;text-transform:uppercase;font-weight:500;padding-left:.35em}
+  .menu-buttons{display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;animation:menuFadeIn 1.1s .15s cubic-bezier(.2,.9,.3,1) both}
+  .menu-btn{
+    padding:14px 24px;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;
+    background:rgba(10,5,18,.55);color:#a89880;border:1px solid #3a2515;border-radius:2px;
+    cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);
+    position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:14px;
+  }
+  .menu-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(212,165,116,.14),transparent);transform:translateX(-100%);transition:transform .7s}
+  .menu-btn:hover{color:#f5e8d5;border-color:#8a6535;box-shadow:0 0 25px rgba(212,165,116,.12),inset 0 0 20px rgba(212,165,116,.04)}
+  .menu-btn:hover::after{transform:translateX(100%)}
+  .menu-btn.primary{border-color:#8a6535;color:#f5e8d5;background:linear-gradient(180deg,rgba(212,165,116,.1),rgba(212,165,116,.02))}
+  .menu-btn.primary:hover{background:linear-gradient(180deg,rgba(212,165,116,.18),rgba(212,165,116,.05));box-shadow:0 0 35px rgba(212,165,116,.2),inset 0 0 24px rgba(212,165,116,.08)}
+  .menu-btn .icon{font-size:15px;opacity:.7;filter:drop-shadow(0 0 6px currentColor);transition:opacity .25s}
+  .menu-btn:hover .icon{opacity:1}
+  .menu-join{margin-top:6px;display:none;gap:6px;animation:menuFadeIn .35s ease both}
+  .menu-join.show{display:flex}
+  .menu-join input{flex:1;padding:13px 14px;border:1px solid #3a2515;background:rgba(5,3,12,.95);color:#f5e8d5;font-family:'Cinzel',serif;font-size:16px;letter-spacing:.5em;text-align:center;text-transform:uppercase;border-radius:2px;outline:none;transition:.25s;min-width:0}
+  .menu-join input:focus{border-color:#d4a574;box-shadow:0 0 25px rgba(212,165,116,.18)}
+  .menu-join input::placeholder{color:#3a2515;letter-spacing:.2em;font-size:11px;font-family:'Rajdhani',sans-serif}
+  .menu-join button{padding:13px 20px;font-size:11px;letter-spacing:.2em;margin:0;flex-shrink:0}
+  .menu-footer{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-family:'Rajdhani',sans-serif;font-size:10px;letter-spacing:.35em;color:#3a2a1a;text-transform:uppercase;z-index:2;pointer-events:none;font-weight:600}
+  .menu-footer b{color:#8a6535;margin:0 6px;font-weight:700}
+  @media(max-height:740px){
+    .menu-top{margin-bottom:26px}
+    .menu-emblem{width:36px;height:36px;margin-bottom:12px}
+    #start h1{font-size:clamp(30px,5.5vw,52px)}
+    .menu-kicker{margin-bottom:14px;font-size:9px;letter-spacing:.5em}
+    .menu-divider{margin:14px auto 12px;width:140px}
+    .menu-tagline{font-size:11px;letter-spacing:.25em}
+  }
+
+  /* ============ LOBBY ============ */
+  #lobby{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:220;padding:20px;background:
+      radial-gradient(ellipse 60% 50% at 50% 40%, rgba(212,165,116,.05) 0%, transparent 65%),
+      radial-gradient(ellipse 80% 60% at 50% 100%, rgba(120,20,40,.12) 0%, transparent 60%),
+      #05030c;
+  }
+  #lobby.show{display:flex}
+  .lobby-box{position:relative;background:linear-gradient(170deg,#0e0718,#0a0512);border:1px solid #2a1d3a;border-radius:4px;padding:34px 32px 30px;max-width:480px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,.9)}
+  .lobby-box::before,.lobby-box::after{content:'';position:absolute;width:20px;height:20px;border:1px solid #d4a574;opacity:.55}
+  .lobby-box::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+  .lobby-box::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+  .lobby-box h2{font-family:'Cinzel',serif;font-size:20px;letter-spacing:.3em;color:#f5e8d5;margin-bottom:24px;text-align:center;text-transform:uppercase;font-weight:700}
+  .lobby-code-row{display:flex;align-items:center;justify-content:center;gap:12px;background:rgba(5,3,12,.7);border:1px solid #3a2515;border-radius:2px;padding:16px;margin-bottom:18px}
+  .lobby-code-row > span{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.25em;color:#8a6535;text-transform:uppercase;font-weight:700}
+  .lobby-code-row b{font-family:'Cinzel',serif;font-size:22px;letter-spacing:.4em;color:#d4a574;text-shadow:0 0 20px rgba(212,165,116,.5);padding-left:.4em}
+  #copy-code-btn{padding:6px 12px;font-size:10px;background:rgba(10,5,18,.9);border:1px solid #3a2515;color:#a89880;border-radius:2px;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:.15em;text-transform:uppercase;font-weight:700;transition:.2s}
+  #copy-code-btn:hover{border-color:#d4a574;color:#f5e8d5}
+  .lobby-players{background:rgba(5,3,12,.7);border:1px solid #2a1d3a;border-radius:2px;padding:14px;margin-bottom:18px;min-height:96px}
+  .lobby-players h4{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.25em;color:#8a6535;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+  .lobby-player{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:2px;background:rgba(15,8,24,.7);margin-bottom:5px;font-size:13px;color:#e8dcc8;font-weight:600;letter-spacing:.05em;border:1px solid transparent}
+  .lobby-player .dot{width:7px;height:7px;border-radius:50%;background:#7ee787;box-shadow:0 0 8px #7ee787;flex-shrink:0}
+  .lobby-player.host .dot{background:#d4a574;box-shadow:0 0 8px #d4a574}
+  .lobby-player .tag{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;color:#d4a574;background:rgba(212,165,116,.12);padding:2px 7px;border-radius:2px;margin-left:auto;text-transform:uppercase;font-weight:700}
+  .lobby-player.me{border-color:#2a1d3a}
+  .lobby-player.me .name{color:#d4a574}
+  .lobby-actions{display:flex;flex-direction:column;gap:8px}
+  .lobby-actions button{padding:13px;font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;border:1px solid #3a2515;border-radius:2px;cursor:pointer;transition:.25s;background:rgba(10,5,18,.7);color:#a89880}
+  .lobby-actions button.primary{background:linear-gradient(180deg,rgba(212,165,116,.16),rgba(212,165,116,.04));border-color:#8a6535;color:#f5e8d5}
+  .lobby-actions button.primary:hover:not(:disabled){border-color:#d4a574;box-shadow:0 0 30px rgba(212,165,116,.18);background:linear-gradient(180deg,rgba(212,165,116,.24),rgba(212,165,116,.06))}
+  .lobby-actions button.primary:disabled{opacity:.35;cursor:not-allowed}
+  .lobby-actions button:not(.primary):hover{border-color:#c81e3a;color:#ff8fa3}
+  .lobby-waiting{font-family:'Rajdhani',sans-serif;font-size:11px;color:#8a7560;margin-top:14px;min-height:16px;letter-spacing:.25em;text-transform:uppercase;text-align:center;font-weight:600}
+
+  /* ============ STORY / OUTRO ============ */
   #story, #outro{position:fixed;inset:0;background:#000;display:none;align-items:center;justify-content:center;z-index:250;padding:20px;cursor:pointer;flex-direction:column;gap:20px}
   #story.show, #outro.show{display:flex}
   #story-canvas, #outro-canvas{transition:opacity .2s;min-height:320px;display:flex;align-items:center;justify-content:center}
-  #story-canvas canvas, #outro-canvas canvas{
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-    image-rendering: -moz-crisp-edges;
-    width: min(320px, 55vh);
-    height: min(320px, 55vh);
-    display: block;
-    filter: drop-shadow(0 0 24px #44aaff88);
-  }
-  #story-text, #outro-text{
-    max-width:700px;
-    font-size:19px;
-    line-height:1.7;
-    color:#fff;
-    text-align:center;
-    white-space:pre-wrap;
-    font-family:'Courier New',monospace;
-    letter-spacing:1px;
-    text-shadow:0 0 16px #66aaff44;
-    min-height:120px;
-  }
-  .story-prompt{
-    margin-top:8px;
-    font-size:13px;
-    color:#ffb347;
-    letter-spacing:2px;
-    opacity:0;
-    transition:opacity .3s;
-    font-family:'Courier New',monospace;
-  }
+  #story-canvas canvas, #outro-canvas canvas{image-rendering:pixelated;image-rendering:crisp-edges;width:min(320px,55vh);height:min(320px,55vh);display:block;filter:drop-shadow(0 0 24px #44aaff88)}
+  #story-text, #outro-text{max-width:700px;font-size:18px;line-height:1.7;color:#fff;text-align:center;white-space:pre-wrap;font-family:'Courier New',monospace;letter-spacing:1px;text-shadow:0 0 16px #66aaff44;min-height:120px}
+  .story-prompt{margin-top:8px;font-size:13px;color:#ffb347;letter-spacing:2px;opacity:0;transition:opacity .3s;font-family:'Courier New',monospace}
   .story-prompt.show{opacity:1;animation:pulseBlink 1.5s infinite}
   @keyframes pulseBlink{50%{opacity:.3}}
-  .story-skip{
-    position:absolute;bottom:18px;right:24px;
-    font-size:11px;color:#444;letter-spacing:2px;
-    font-family:'Courier New',monospace;
-  }
-  #outro-btn{
-    display:none;margin-top:10px;padding:14px 40px;border-radius:10px;border:none;
-    cursor:pointer;font-family:inherit;font-size:16px;font-weight:900;letter-spacing:1.5px;
-    background:linear-gradient(135deg,#ff2d55,#ffb347);color:#fff;
-    box-shadow:0 10px 30px #ff7b0088;
-  }
-  #outro-btn:hover{transform:translateY(-2px)}
+  .story-skip{position:absolute;bottom:18px;right:24px;font-size:11px;color:#444;letter-spacing:2px;font-family:'Courier New',monospace}
+  #outro-btn{display:none;margin-top:10px;padding:14px 40px;border-radius:2px;border:1px solid #8a6535;cursor:pointer;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:.3em;background:linear-gradient(180deg,rgba(212,165,116,.16),rgba(212,165,116,.04));color:#f5e8d5;text-transform:uppercase}
+  #outro-btn:hover{border-color:#d4a574;box-shadow:0 0 30px rgba(212,165,116,.2)}
   #outro-btn.show{display:block}
 
-  /* Start */
-  #start{position:fixed;inset:0;background:radial-gradient(ellipse at center,#1a0a2aee,#000000f0);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:20px;text-align:center}
-  #start.show{display:flex}
-  #start h1{font-size:56px;font-weight:900;letter-spacing:2px;background:linear-gradient(90deg,#ff2d55,#ffb347);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:8px;filter:drop-shadow(0 0 20px #ff2d5588)}
-  #start p{color:#a99cc4;margin-bottom:24px;font-size:16px;max-width:500px}
-  #start button{padding:18px 50px;font-size:18px;font-weight:900;letter-spacing:2px;background:linear-gradient(135deg,#ff2d55,#ff7b00);color:#fff;border:none;border-radius:8px;cursor:pointer;box-shadow:0 10px 30px #ff2d5588;transition:.2s}
-  #start button:hover{transform:translateY(-2px);box-shadow:0 14px 36px #ff7b00aa}
-  .controls{margin-top:28px;font-size:13px;color:#7a6b99;line-height:2;max-width:600px}
-  .controls b{color:#ffb347;padding:2px 8px;background:#1a0f2c;border:1px solid #3a2158;border-radius:4px;margin:0 3px}
-
-  /* Pause, Question, etc */
+  /* ============ PAUSE / QUESTION ============ */
   #pause{position:fixed;inset:0;background:#000000dd;backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:150;padding:20px}
   #pause.show{display:flex}
-  .pbox{background:linear-gradient(160deg,#1a0f2c,#241238);border:1px solid #4a2f70;border-radius:20px;padding:32px;max-width:420px;width:100%;box-shadow:0 30px 80px #000}
-  .pbox h2{font-size:28px;margin-bottom:20px;text-align:center;background:linear-gradient(90deg,#ff2d55,#ffb347);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .pbox{background:linear-gradient(170deg,#0e0718,#0a0512);border:1px solid #2a1d3a;border-radius:4px;padding:32px;max-width:420px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,.9)}
+  .pbox h2{font-family:'Cinzel',serif;font-size:22px;margin-bottom:24px;text-align:center;color:#f5e8d5;letter-spacing:.25em;text-transform:uppercase;font-weight:700}
   .setting{margin-bottom:18px}
-  .setting label{display:flex;justify-content:space-between;font-size:13px;color:#c9b8e8;margin-bottom:6px;font-weight:600}
-  .setting input[type=range]{width:100%;accent-color:#ff7b00;cursor:pointer}
-  .setting input[type=checkbox]{accent-color:#ff7b00;transform:scale(1.3);margin-right:8px;cursor:pointer}
-  .pbox button{width:100%;padding:14px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:16px;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,#ff2d55,#ff7b00);color:#fff;box-shadow:0 10px 26px #ff2d5588;transition:.15s;margin-top:8px}
-  .pbox button:hover{transform:translateY(-2px)}
-  #question{position:fixed;inset:0;background:#000000aa;backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .setting label{display:flex;justify-content:space-between;font-size:12px;color:#a89880;margin-bottom:6px;font-weight:600;letter-spacing:.05em}
+  .setting input[type=range]{width:100%;accent-color:#d4a574;cursor:pointer}
+  .setting input[type=checkbox]{accent-color:#d4a574;transform:scale(1.2);margin-right:8px;cursor:pointer}
+  .pbox button{width:100%;padding:14px;border-radius:2px;border:1px solid #8a6535;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:.3em;background:linear-gradient(180deg,rgba(212,165,116,.14),rgba(212,165,116,.02));color:#f5e8d5;transition:.2s;margin-top:8px;text-transform:uppercase}
+  .pbox button:hover{border-color:#d4a574;box-shadow:0 0 30px rgba(212,165,116,.18)}
+  #question{position:fixed;inset:0;background:#000000cc;backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
   #question.show{display:flex}
-  .qbox{background:linear-gradient(160deg,#1a0f2c,#241238);border:1px solid #4a2f70;border-radius:16px;padding:26px;max-width:680px;width:100%;box-shadow:0 30px 80px #000}
+  .qbox{background:linear-gradient(170deg,#0e0718,#0a0512);border:1px solid #2a1d3a;border-radius:4px;padding:26px;max-width:680px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,.9),0 0 60px rgba(212,165,116,.08)}
   .qhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-  .qcat{font-size:11px;font-weight:900;letter-spacing:1.5px;color:#ffb347;background:#ffb3471a;padding:5px 12px;border-radius:99px;border:1px solid #ffb34733;text-transform:uppercase}
-  .qtimer{font-size:24px;font-weight:900;color:#7ee787;font-variant-numeric:tabular-nums}
-  .qtimer.warn{color:#ff2d55;animation:pulse .5s infinite}
+  .qcat{font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:.2em;color:#d4a574;background:rgba(212,165,116,.1);padding:5px 12px;border-radius:2px;border:1px solid rgba(212,165,116,.2);text-transform:uppercase}
+  .qtimer{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:#7ee787;font-variant-numeric:tabular-nums}
+  .qtimer.warn{color:#c81e3a;animation:pulse .5s infinite}
   @keyframes pulse{50%{opacity:.4}}
-  .tbar{height:6px;background:#0e0718;border-radius:99px;overflow:hidden;margin-bottom:18px}
-  .tbar>div{height:100%;width:100%;background:linear-gradient(90deg,#7ee787,#ffb347);border-radius:99px;transition:width .1s linear}
-  .qtext{font-size:22px;font-weight:800;line-height:1.4;margin-bottom:20px}
-  .qopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tbar{height:4px;background:#0a0512;border-radius:2px;overflow:hidden;margin-bottom:20px}
+  .tbar>div{height:100%;width:100%;background:linear-gradient(90deg,#7ee787,#d4a574);border-radius:2px;transition:width .1s linear}
+  .qtext{font-size:21px;font-weight:700;line-height:1.4;margin-bottom:20px;color:#f5e8d5;font-family:'Rajdhani',sans-serif}
+  .qopts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   @media(max-width:600px){.qopts{grid-template-columns:1fr}}
-  .qopt{text-align:left;padding:14px 18px;border-radius:8px;cursor:pointer;font-family:inherit;background:#120a20;border:2px solid #3a2158;color:#f0e6ff;font-size:15px;font-weight:600;transition:.15s;display:flex;gap:12px;align-items:center}
-  .qopt:hover:not(:disabled){border-color:#ff7b00;background:#1e0f30;transform:translateX(4px)}
-  .qopt .k{width:24px;height:24px;flex:0 0 24px;border-radius:6px;background:#33254a;display:grid;place-items:center;font-size:12px;font-weight:900;color:#a99cc4}
-  .qopt.right{border-color:#2ecc71;background:#0c2a1a}
+  .qopt{text-align:left;padding:13px 16px;border-radius:2px;cursor:pointer;font-family:'Rajdhani',sans-serif;background:rgba(10,5,18,.7);border:1px solid #2a1d3a;color:#e8dcc8;font-size:14px;font-weight:600;transition:.15s;display:flex;gap:12px;align-items:center}
+  .qopt:hover:not(:disabled){border-color:#d4a574;background:rgba(20,10,32,.85)}
+  .qopt .k{width:22px;height:22px;flex:0 0 22px;border-radius:2px;background:#2a1d3a;display:grid;place-items:center;font-size:11px;font-weight:900;color:#8a6535;font-family:'Cinzel',serif}
+  .qopt.right{border-color:#2ecc71;background:rgba(12,42,26,.9)}
   .qopt.right .k{background:#2ecc71;color:#000}
-  .qopt.wrong{border-color:#ff2d55;background:#2a0a14}
-  .qopt.wrong .k{background:#ff2d55}
+  .qopt.wrong{border-color:#c81e3a;background:rgba(42,10,20,.9)}
+  .qopt.wrong .k{background:#c81e3a}
   .qopt:disabled{cursor:default}
-  #toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:60;padding:18px 28px;border-radius:12px;font-size:16px;font-weight:700;line-height:1.4;max-width:600px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s;border-left:5px solid;box-shadow:0 20px 60px -15px #000;white-space:pre-line}
+
+  #toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:60;padding:18px 28px;border-radius:2px;font-size:15px;font-weight:600;line-height:1.5;max-width:600px;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s;border-left:4px solid;box-shadow:0 20px 60px -15px #000;white-space:pre-line;font-family:'Rajdhani',sans-serif}
   #toast.show{opacity:1}
-  #toast.ok{background:#0c2a1aee;border-color:#2ecc71;color:#c3f5d8}
-  #toast.no{background:#2a0a14ee;border-color:#ff2d55;color:#ffc9d4}
+  #toast.ok{background:rgba(12,42,26,.95);border-color:#2ecc71;color:#c3f5d8}
+  #toast.no{background:rgba(42,10,20,.95);border-color:#c81e3a;color:#ffc9d4}
   #toast b{color:#fff}
-  #damage-flash{position:fixed;inset:0;background:#ff2d55;opacity:0;pointer-events:none;z-index:8;transition:opacity .1s}
+  #damage-flash{position:fixed;inset:0;background:#c81e3a;opacity:0;pointer-events:none;z-index:8;transition:opacity .1s}
   #damage-flash.on{opacity:.35}
   #block-indicator{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 40%,#4488ff33 100%);opacity:0;pointer-events:none;z-index:9;transition:opacity .15s}
   #block-indicator.on{opacity:1}
   .ehp{position:fixed;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:7;transition:opacity .2s}
-  .ehp-bar{height:8px;background:#000a;border:1px solid #ff2d55;border-radius:2px;overflow:hidden;box-shadow:0 0 8px #000}
-  .ehp-fill{height:100%;background:linear-gradient(90deg,#ff2d55,#ff7b00);transition:width .2s}
+  .ehp-bar{height:8px;background:#000a;border:1px solid #c81e3a;border-radius:2px;overflow:hidden;box-shadow:0 0 8px #000}
+  .ehp-fill{height:100%;background:linear-gradient(90deg,#c81e3a,#ff7b00);transition:width .2s}
+
   #gameover{position:fixed;inset:0;background:#000000dd;backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
   #gameover.show{display:flex}
-  .gobox{text-align:center;background:linear-gradient(160deg,#1a0f2c,#241238);border:1px solid #4a2f70;border-radius:20px;padding:40px;max-width:420px;width:100%;box-shadow:0 30px 80px #000}
-  .gobox h2{font-size:36px;margin-bottom:8px;background:linear-gradient(90deg,#ff2d55,#ffb347);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .gobox p{color:#a99cc4;margin-bottom:24px}
-  .gostats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
-  .gs{background:#120a20;border:1px solid #3a2158;border-radius:10px;padding:12px}
-  .gs .v{font-size:22px;font-weight:900;color:#ffb347}
-  .gs .l{font-size:10px;color:#8a7ba8;letter-spacing:.6px;text-transform:uppercase;margin-top:3px}
-  .gobox button{padding:14px 40px;font-size:16px;font-weight:900;letter-spacing:1.5px;background:linear-gradient(135deg,#ff2d55,#ff7b00);color:#fff;border:none;border-radius:10px;cursor:pointer;box-shadow:0 10px 26px #ff2d5588;transition:.15s}
-  .gobox button:hover{transform:translateY(-2px)}
-  #click-hint{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;font-size:16px;font-weight:700;color:#fff;text-shadow:0 2px 12px #000;background:#00000055;cursor:pointer}
+  .gobox{text-align:center;background:linear-gradient(170deg,#0e0718,#0a0512);border:1px solid #2a1d3a;border-radius:4px;padding:40px;max-width:420px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,.9)}
+  .gobox h2{font-family:'Cinzel',serif;font-size:26px;margin-bottom:8px;color:#c81e3a;letter-spacing:.25em;text-transform:uppercase;font-weight:700}
+  .gobox p{color:#8a7560;margin-bottom:24px;font-size:13px;letter-spacing:.05em}
+  .gostats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:24px}
+  .gs{background:rgba(5,3,12,.7);border:1px solid #2a1d3a;border-radius:2px;padding:12px}
+  .gs .v{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:#d4a574}
+  .gs .l{font-family:'Cinzel',serif;font-size:9px;color:#8a6535;letter-spacing:.15em;text-transform:uppercase;margin-top:4px;font-weight:700}
+  .gobox button{padding:14px 40px;font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:.3em;background:linear-gradient(180deg,rgba(212,165,116,.16),rgba(212,165,116,.04));color:#f5e8d5;border:1px solid #8a6535;border-radius:2px;cursor:pointer;transition:.2s;text-transform:uppercase}
+  .gobox button:hover{border-color:#d4a574;box-shadow:0 0 30px rgba(212,165,116,.2)}
+  #click-hint{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;font-size:15px;font-weight:700;color:#fff;text-shadow:0 2px 12px #000;background:#00000055;cursor:pointer;letter-spacing:.1em}
   #click-hint.show{display:flex}
-  #click-hint div{padding:18px 30px;background:#000000cc;border:1px solid #ffb347;border-radius:12px;animation:pulse 1.5s infinite}
+  #click-hint div{padding:16px 28px;background:rgba(10,5,18,.9);border:1px solid #d4a574;border-radius:2px;animation:pulse 1.5s infinite;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.25em;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -195,15 +261,20 @@
 
 <div id="auth">
   <div class="auth-box">
-    <h1>⚔️ Клинок Знаний</h1>
-    <div class="sub">Войди в орден мудрецов</div>
+    <svg class="auth-emblem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2 L15 6 L14 12 L12 15 L10 12 L9 6 Z"/>
+      <line x1="12" y1="15" x2="12" y2="21"/>
+      <line x1="8" y1="19" x2="16" y2="19"/>
+    </svg>
+    <h1>Лезвие Истины</h1>
+    <div class="sub">Орден Мудрецов</div>
     <div class="tabs">
       <div class="tab active" id="tab-login">Вход</div>
       <div class="tab" id="tab-reg">Регистрация</div>
     </div>
     <input type="text" id="inp-login" placeholder="Логин (мин. 3 символа)" maxlength="20" autocomplete="off">
     <input type="password" id="inp-pass" placeholder="Пароль (мин. 4 символа)" maxlength="40">
-    <button id="auth-btn">ВОЙТИ</button>
+    <button id="auth-btn">Войти</button>
     <div class="auth-error" id="auth-error"></div>
     <div class="auth-info" id="auth-info"></div>
   </div>
@@ -213,28 +284,77 @@
   <div id="story-canvas"></div>
   <div id="story-text"></div>
   <div class="story-prompt" id="story-prompt">▶ Клик или пробел — далее</div>
-  <div class="story-skip">Esc · пропустить всё</div>
+  <div class="story-skip">Esc · пропустить</div>
 </div>
 
 <div id="start">
-  <h1>⚔️ КЛИНОК ЗНАНИЙ</h1>
-  <p>Переживи 10 волн. На 5-й и 10-й тебя ждут боссы. Бей силой знаний.</p>
-  <button id="start-btn">НАЧАТЬ БОЙ</button>
-  <div class="controls">
-    <div><b>WASD</b> движение · <b>Space</b> прыжок · <b>Shift</b> рывок · <b>C</b> подкат</div>
-    <div><b>ЛКМ</b> / <b>F</b> — атака · <b>ПКМ</b> — блок · <b>Esc</b> — пауза</div>
+  <canvas id="menu-bg"></canvas>
+  <div id="menu-vignette"></div>
+  <div id="menu-content">
+    <div class="menu-top">
+      <div class="menu-kicker">Орден Мудрецов</div>
+      <svg class="menu-emblem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2 L15 6 L14 12 L12 15 L10 12 L9 6 Z"/>
+        <line x1="12" y1="15" x2="12" y2="21"/>
+        <line x1="8" y1="19" x2="16" y2="19"/>
+      </svg>
+      <h1>ЛЕЗВИЕ ИСТИНЫ</h1>
+      <div class="menu-divider"></div>
+      <div class="menu-tagline">Испытай силу знания в десяти волнах тьмы</div>
+    </div>
+    <div class="menu-buttons">
+      <button id="start-btn" class="menu-btn primary">
+        <span class="icon">⚔</span>
+        <span>Одиночный режим</span>
+      </button>
+      <button id="lobby-create-btn" class="menu-btn">
+        <span class="icon">⚑</span>
+        <span>Создать лобби</span>
+      </button>
+      <button id="lobby-join-toggle" class="menu-btn">
+        <span class="icon">⚓</span>
+        <span>Войти по коду</span>
+      </button>
+      <div class="menu-join" id="menu-join">
+        <input id="lobby-code-inp" placeholder="КОД" maxlength="6">
+        <button id="lobby-join-btn" class="menu-btn primary">Войти</button>
+      </div>
+    </div>
+  </div>
+  <div class="menu-footer">
+    <b>WASD</b>движение <b>SPACE</b>прыжок <b>SHIFT</b>рывок
+  </div>
+</div>
+
+<div id="lobby">
+  <div class="lobby-box">
+    <h2>Лобби</h2>
+    <div class="lobby-code-row">
+      <span>Код</span>
+      <b id="lobby-code-val">------</b>
+      <button id="copy-code-btn">Копировать</button>
+    </div>
+    <div class="lobby-players">
+      <h4>Игроки (макс. 3)</h4>
+      <div id="lobby-players-list"></div>
+    </div>
+    <div class="lobby-actions">
+      <button id="lobby-start-game" class="primary">Начать игру</button>
+      <button id="lobby-leave-btn">Выйти из лобби</button>
+    </div>
+    <div class="lobby-waiting" id="lobby-waiting"></div>
   </div>
 </div>
 
 <div id="pause">
   <div class="pbox">
-    <h2>⏸ ПАУЗА</h2>
+    <h2>Пауза</h2>
     <div class="setting"><label>Чувствительность мыши <span id="sens-val">1.0</span></label><input type="range" id="sens" min="0.2" max="3" step="0.1" value="1"></div>
     <div class="setting"><label>Громкость <span id="vol-val">70%</span></label><input type="range" id="vol" min="0" max="1" step="0.05" value="0.7"></div>
     <div class="setting"><label><input type="checkbox" id="shadows" checked> Тени</label></div>
     <div class="setting"><label><input type="checkbox" id="particles-toggle" checked> Частицы</label></div>
-    <button id="resume-btn">ПРОДОЛЖИТЬ</button>
-    <button id="logout-btn" style="background:#2a0a14;box-shadow:none;border:1px solid #ff2d55;color:#ff8fa3;margin-top:10px">ВЫЙТИ ИЗ АККАУНТА</button>
+    <button id="resume-btn">Продолжить</button>
+    <button id="logout-btn" style="background:none;border-color:#c81e3a;color:#ff8fa3;margin-top:10px">Выйти из аккаунта</button>
   </div>
 </div>
 
@@ -251,7 +371,7 @@
   <div id="outro-canvas"></div>
   <div id="outro-text"></div>
   <div class="story-prompt" id="outro-prompt">▶ Клик — далее</div>
-  <button id="outro-btn">ВЕРНУТЬСЯ В МЕНЮ</button>
+  <button id="outro-btn">Вернуться в меню</button>
 </div>
 
 <div id="gameover">
@@ -259,7 +379,7 @@
     <h2 id="go-title">Поражение</h2>
     <p id="go-sub"></p>
     <div class="gostats" id="go-stats"></div>
-    <button id="go-btn">ПОПРОБОВАТЬ СНОВА</button>
+    <button id="go-btn">Попробовать снова</button>
   </div>
 </div>
 
@@ -269,13 +389,28 @@
 <script type="module">
 import * as THREE from 'three';
 
-/* ================== SUPABASE ПОДКЛЮЧЕНИЕ ================== */
+/* ================== SUPABASE ================== */
 const SUPABASE_URL = 'https://vbfrluzxpnwuqcxjbwim.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Ibvs57OEdAoxUdekf569Qg_TztNwGPr';
 const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ================== ВОПРОСЫ ================== */
+/* ================== HASH (works on file:// too) ================== */
+async function hashPassword(password){
+  const salted = password + 'eduknife_salt_v1';
+  let h1 = 0x811c9dc5 >>> 0, h2 = 0x01000193 >>> 0, h3 = 0x12345678 >>> 0, h4 = 0x9abcdef0 >>> 0;
+  for(let i = 0; i < salted.length; i++){
+    const c = salted.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0;
+    h2 = Math.imul(h2 + c, 0x85ebca6b) >>> 0;
+    h3 = Math.imul(h3 ^ (c << 3), 0xc2b2ae35) >>> 0;
+    h4 = Math.imul(h4 + (c ^ 0x1b873593), 0x27d4eb2f) >>> 0;
+  }
+  const parts = [h1, h2, h3, h4, h1 ^ h2, h3 ^ h4, (h1 + h2) >>> 0, (h3 + h4) >>> 0];
+  return parts.map(n => n.toString(16).padStart(8, '0')).join('');
+}
+
+/* ================== QUESTIONS ================== */
 const QUESTIONS = [
   {c:'Математика',q:'Сколько будет 15 × 4?',o:['45','60','75','54'],a:1,e:'15 × 4 = 60'},
   {c:'Математика',q:'Чему равно 7²?',o:['14','21','49','77'],a:2,e:'7 × 7 = 49'},
@@ -284,24 +419,77 @@ const QUESTIONS = [
   {c:'Математика',q:'25% от 200 =',o:['25','40','50','75'],a:2,e:'200 ÷ 4 = 50'},
   {c:'Математика',q:'√144 =',o:['11','12','14','16'],a:1,e:'12 × 12 = 144'},
   {c:'Математика',q:'Периметр квадрата со стороной 6 см:',o:['12 см','24 см','36 см','30 см'],a:1,e:'P = 4 × 6 = 24'},
+  {c:'Математика',q:'2³ + 3² =',o:['17','15','12','11'],a:0,e:'8 + 9 = 17'},
+  {c:'Математика',q:'Чему равно 100 − 37?',o:['53','63','67','73'],a:1,e:'100 − 37 = 63'},
+  {c:'Математика',q:'1 км = ? метров',o:['100','1000','10000','10'],a:1,e:'1000 метров'},
+  {c:'Математика',q:'Чему равно 0.5 × 8?',o:['2','3','4','5'],a:2,e:'0.5 × 8 = 4'},
+  {c:'Математика',q:'Сколько градусов в прямом угле?',o:['45°','90°','180°','360°'],a:1,e:'90°'},
+  {c:'Математика',q:'Наименьшее простое число:',o:['0','1','2','3'],a:2,e:'2'},
+  {c:'Математика',q:'5! (факториал) =',o:['25','60','100','120'],a:3,e:'1×2×3×4×5 = 120'},
+  {c:'Математика',q:'Площадь квадрата со стороной 7:',o:['14','28','49','77'],a:2,e:'7 × 7 = 49'},
+  {c:'Математика',q:'3/4 от 100 =',o:['50','75','80','65'],a:1,e:'100 × 3/4 = 75'},
+  {c:'Математика',q:'Число π ≈',o:['2.14','3.14','3.41','4.13'],a:1,e:'π ≈ 3.14'},
+  {c:'Математика',q:'2 + 2 × 2 =',o:['8','6','4','2'],a:1,e:'Сначала умножение: 2 + 4 = 6'},
+  {c:'Математика',q:'Если x + 5 = 12, то x =',o:['5','6','7','8'],a:2,e:'x = 12 − 5 = 7'},
+  {c:'Математика',q:'Сколько будет 12 × 12?',o:['124','132','144','154'],a:2,e:'144'},
+  {c:'Математика',q:'Угол больше 90°, но меньше 180°:',o:['Острый','Прямой','Тупой','Развёрнутый'],a:2,e:'Тупой'},
+  {c:'Математика',q:'НОД(12, 18) =',o:['2','3','6','12'],a:2,e:'6'},
+  {c:'Математика',q:'Сколько секунд в 5 минутах?',o:['300','250','360','500'],a:0,e:'5 × 60 = 300'},
+  {c:'Математика',q:'Чётное число:',o:['13','27','31','48'],a:3,e:'48'},
   {c:'Русский язык',q:'Букв в русском алфавите:',o:['31','32','33','36'],a:2,e:'33 буквы'},
   {c:'Русский язык',q:'Часть речи, обозначающая предмет:',o:['Глагол','Прилагательное','Существительное','Наречие'],a:2,e:'Существительное'},
   {c:'Русский язык',q:'Букв в слове «солнце»:',o:['5','6','7','4'],a:1,e:'6 букв, 5 звуков'},
   {c:'Русский язык',q:'Падеж, отвечающий на «кому?»:',o:['Родительный','Дательный','Винительный','Творительный'],a:1,e:'Дательный'},
   {c:'Русский язык',q:'Антоним к «храбрый»:',o:['смелый','трусливый','сильный','быстрый'],a:1,e:'Трусливый'},
   {c:'Русский язык',q:'Правильное ударение:',o:['звОнит','звонИт','звОнИт','без удар.'],a:1,e:'звонИт'},
+  {c:'Русский язык',q:'Сколько гласных звуков в русском?',o:['5','6','7','10'],a:1,e:'6 гласных звуков'},
+  {c:'Русский язык',q:'Синоним к «большой»:',o:['маленький','огромный','узкий','тонкий'],a:1,e:'Огромный'},
+  {c:'Русский язык',q:'Часть речи «быстро»:',o:['Существительное','Глагол','Наречие','Прилагательное'],a:2,e:'Наречие'},
+  {c:'Русский язык',q:'Звуков в слове «яблоко»:',o:['6','7','8','9'],a:1,e:'7 звуков [йаблака]'},
+  {c:'Русский язык',q:'Приставка в слове «пришёл»:',o:['при','приш','шёл','ш'],a:0,e:'Приставка — при'},
+  {c:'Русский язык',q:'Буква «ё» в слове «ёжик» даёт:',o:['1 звук','2 звука','3 звука','0 звуков'],a:1,e:'[йо] — два звука'},
+  {c:'Русский язык',q:'Правильное написание:',o:['не знаю','незнаю','ни знаю','низнаю'],a:0,e:'Раздельно'},
+  {c:'Русский язык',q:'Одушевлённое существительное:',o:['стол','собака','дом','камень'],a:1,e:'Собака'},
+  {c:'Русский язык',q:'Род слова «пальто»:',o:['Мужской','Женский','Средний','Общий'],a:2,e:'Средний род'},
+  {c:'Русский язык',q:'Множественное число слова «ребёнок»:',o:['ребёнки','ребята','дети','ребёнка'],a:2,e:'Дети'},
+  {c:'Русский язык',q:'Глагол в неопределённой форме:',o:['бегу','бежал','бежать','бежит'],a:2,e:'Бежать'},
+  {c:'Русский язык',q:'Антоним к «день»:',o:['утро','вечер','ночь','полдень'],a:2,e:'Ночь'},
+  {c:'Русский язык',q:'Частица «не» с глаголом пишется:',o:['Слитно','Раздельно','Через дефис','По-разному'],a:1,e:'Раздельно'},
+  {c:'Литература',q:'Автор «Войны и мира»:',o:['Достоевский','Толстой','Чехов','Тургенев'],a:1,e:'Лев Толстой'},
+  {c:'Литература',q:'Автор «Преступления и наказания»:',o:['Толстой','Достоевский','Гоголь','Пушкин'],a:1,e:'Достоевский'},
+  {c:'Литература',q:'«Евгений Онегин» написал:',o:['Лермонтов','Пушкин','Гоголь','Тютчев'],a:1,e:'Пушкин'},
+  {c:'Литература',q:'Автор «Мёртвых душ»:',o:['Пушкин','Гоголь','Тургенев','Гончаров'],a:1,e:'Гоголь'},
+  {c:'Литература',q:'Главный герой «Героя нашего времени»:',o:['Онегин','Печорин','Чацкий','Базаров'],a:1,e:'Печорин'},
+  {c:'Литература',q:'Автор «Мастера и Маргариты»:',o:['Булгаков','Набоков','Пастернак','Шолохов'],a:0,e:'Булгаков'},
+  {c:'Литература',q:'Автор «Гарри Поттера»:',o:['Толкин','Роулинг','Льюис','Пратчетт'],a:1,e:'Дж. К. Роулинг'},
+  {c:'Литература',q:'Кто написал «Ромео и Джульетту»?',o:['Мольер','Шекспир','Гёте','Данте'],a:1,e:'Шекспир'},
+  {c:'Литература',q:'Автор «Маленького принца»:',o:['Экзюпери','Сент-Экзюпери','Камю','Гюго'],a:1,e:'Сент-Экзюпери'},
+  {c:'Литература',q:'Поэма Гомера о Троянской войне:',o:['Одиссея','Илиада','Энеида','Аргонавтика'],a:1,e:'Илиада'},
+  {c:'История',q:'Год начала ВОВ:',o:['1939','1940','1941','1945'],a:2,e:'22 июня 1941'},
+  {c:'История',q:'Кто первым полетел в космос?',o:['Армстронг','Гагарин','Титов','Терешкова'],a:1,e:'Юрий Гагарин'},
+  {c:'История',q:'Крещение Руси:',o:['862','988','1054','1147'],a:1,e:'988 год'},
+  {c:'История',q:'Основатель Санкт-Петербурга:',o:['Иван Грозный','Пётр I','Екатерина II','Александр I'],a:1,e:'Пётр I, 1703'},
+  {c:'История',q:'Высадка на Луну:',o:['1961','1965','1969','1972'],a:2,e:'20 июля 1969'},
+  {c:'История',q:'Куликовская битва:',o:['1240','1380','1480','1552'],a:1,e:'1380 год'},
+  {c:'История',q:'Первый президент США:',o:['Линкольн','Вашингтон','Джефферсон','Адамс'],a:1,e:'Джордж Вашингтон'},
+  {c:'История',q:'Год падения Берлинской стены:',o:['1985','1989','1991','1993'],a:1,e:'1989'},
+  {c:'История',q:'Кто был последним царём России?',o:['Александр III','Николай II','Александр II','Пётр III'],a:1,e:'Николай II'},
+  {c:'История',q:'Бородинское сражение:',o:['1709','1799','1812','1853'],a:2,e:'1812 год'},
   {c:'География',q:'Самая большая страна:',o:['Китай','Канада','Россия','США'],a:2,e:'Россия'},
   {c:'География',q:'Столица Австралии:',o:['Сидней','Мельбурн','Канберра','Брисбен'],a:2,e:'Канберра'},
   {c:'География',q:'Самый большой океан:',o:['Атлантический','Индийский','Тихий','Сев. Ледовитый'],a:2,e:'Тихий'},
   {c:'География',q:'Самая высокая гора:',o:['Эльбрус','Эверест','Килиманджаро','Монблан'],a:1,e:'Эверест 8848 м'},
   {c:'География',q:'Сколько материков:',o:['5','6','7','8'],a:1,e:'6 материков'},
   {c:'География',q:'Самое глубокое озеро:',o:['Байкал','Танганьика','Каспийское','Верхнее'],a:0,e:'Байкал 1642 м'},
-  {c:'История',q:'Год начала ВОВ:',o:['1939','1940','1941','1945'],a:2,e:'22 июня 1941'},
-  {c:'История',q:'Кто первым полетел в космос?',o:['Армстронг','Гагарин','Титов','Терешкова'],a:1,e:'Юрий Гагарин'},
-  {c:'История',q:'Крещение Руси:',o:['862','988','1054','1147'],a:1,e:'988 год'},
-  {c:'История',q:'Автор «Войны и мира»:',o:['Достоевский','Толстой','Чехов','Тургенев'],a:1,e:'Лев Толстой'},
-  {c:'История',q:'Высадка на Луну:',o:['1961','1965','1969','1972'],a:2,e:'20 июля 1969'},
-  {c:'История',q:'Основатель Санкт-Петербурга:',o:['Иван Грозный','Пётр I','Екатерина II','Александр I'],a:1,e:'Пётр I, 1703'},
+  {c:'География',q:'Столица Японии:',o:['Осака','Киото','Токио','Нагоя'],a:2,e:'Токио'},
+  {c:'География',q:'Самая длинная река:',o:['Амазонка','Нил','Янцзы','Миссисипи'],a:1,e:'Нил (спорно с Амазонкой)'},
+  {c:'География',q:'Столица Франции:',o:['Лион','Марсель','Париж','Ницца'],a:2,e:'Париж'},
+  {c:'География',q:'Самая маленькая страна:',o:['Монако','Ватикан','Сан-Марино','Лихтенштейн'],a:1,e:'Ватикан'},
+  {c:'География',q:'Пустыня Сахара на:',o:['Азии','Африке','Австралии','Америке'],a:1,e:'Африка'},
+  {c:'География',q:'Байкал находится в:',o:['Сибири','Карелии','Крыму','Урале'],a:0,e:'Сибирь'},
+  {c:'География',q:'Столица Германии:',o:['Мюнхен','Гамбург','Берлин','Кёльн'],a:2,e:'Берлин'},
+  {c:'География',q:'Самая длинная река в России:',o:['Волга','Обь','Лена','Енисей'],a:2,e:'Лена'},
+  {c:'География',q:'Столица Канады:',o:['Торонто','Ванкувер','Оттава','Монреаль'],a:2,e:'Оттава'},
   {c:'Наука',q:'Формула воды:',o:['CO₂','H₂O','O₂','NaCl'],a:1,e:'H₂O'},
   {c:'Наука',q:'Планет в Солнечной системе:',o:['7','8','9','10'],a:1,e:'8 планет'},
   {c:'Наука',q:'Газ для дыхания:',o:['Азот','Кислород','CO₂','Водород'],a:1,e:'O₂'},
@@ -309,10 +497,48 @@ const QUESTIONS = [
   {c:'Наука',q:'Орган, качающий кровь:',o:['Печень','Лёгкие','Сердце','Почки'],a:2,e:'Сердце'},
   {c:'Наука',q:'Самая твёрдая порода:',o:['Кварц','Алмаз','Гранит','Корунд'],a:1,e:'Алмаз'},
   {c:'Наука',q:'Хромосом у человека:',o:['23','44','46','48'],a:2,e:'46 хромосом'},
+  {c:'Наука',q:'Символ железа:',o:['Fe','Ir','In','Au'],a:0,e:'Fe'},
+  {c:'Наука',q:'Планета ближе всех к Солнцу:',o:['Венера','Меркурий','Земля','Марс'],a:1,e:'Меркурий'},
+  {c:'Наука',q:'Самое распространённое вещество на Земле:',o:['Кислород','Вода','Кремний','Железо'],a:1,e:'Вода'},
+  {c:'Наука',q:'Сколько костей в теле взрослого человека?',o:['186','206','226','246'],a:1,e:'206 костей'},
+  {c:'Наука',q:'Красная планета:',o:['Венера','Марс','Юпитер','Сатурн'],a:1,e:'Марс'},
+  {c:'Наука',q:'Символ золота:',o:['Ag','Au','Al','Ar'],a:1,e:'Au'},
+  {c:'Наука',q:'Газ, вызывающий парниковый эффект:',o:['O₂','N₂','CO₂','He'],a:2,e:'CO₂'},
+  {c:'Наука',q:'Где находится ДНК?',o:['В мембране','В ядре','В цитоплазме','В митохондриях'],a:1,e:'В ядре'},
+  {c:'Наука',q:'Сколько планет-гигантов?',o:['2','3','4','5'],a:2,e:'4 (Юпитер, Сатурн, Уран, Нептун)'},
+  {c:'Технологии',q:'Что означает «CPU»?',o:['Центральный процессор','Память','Видеокарта','Диск'],a:0,e:'Центральный процессор'},
+  {c:'Технологии',q:'Язык программирования для веба:',o:['JavaScript','Photoshop','Excel','Word'],a:0,e:'JavaScript'},
+  {c:'Технологии',q:'Сколько бит в байте?',o:['4','8','16','32'],a:1,e:'8 бит'},
+  {c:'Технологии',q:'Компания, создавшая Windows:',o:['Apple','Microsoft','Google','IBM'],a:1,e:'Microsoft'},
+  {c:'Технологии',q:'Аббревиатура «ИИ»:',o:['Интернет','Искусственный интеллект','Игровая индустрия','Информация'],a:1,e:'Искусственный интеллект'},
+  {c:'Технологии',q:'HTML — это язык:',o:['Программирования','Разметки','Запросов','Стилей'],a:1,e:'Разметки'},
+  {c:'Технологии',q:'Что делает GPU?',o:['Обрабатывает графику','Хранит данные','Управляет сетью','Охлаждает'],a:0,e:'Графика'},
+  {c:'Технологии',q:'Создатель Linux:',o:['Билл Гейтс','Линус Торвальдс','Стив Джобс','Марк Цукерберг'],a:1,e:'Линус Торвальдс'},
+  {c:'Технологии',q:'Формат сжатия изображений:',o:['MP3','JPEG','TXT','EXE'],a:1,e:'JPEG'},
+  {c:'Технологии',q:'Что такое «баг»?',o:['Ошибка в программе','Компьютер','Игра','Файл'],a:0,e:'Ошибка'},
+  {c:'Искусство',q:'Автор «Моны Лизы»:',o:['Микеланджело','Леонардо да Винчи','Рафаэль','Рембрандт'],a:1,e:'Леонардо да Винчи'},
+  {c:'Искусство',q:'«Чёрный квадрат» написал:',o:['Кандинский','Малевич','Пикассо','Шагал'],a:1,e:'Казимир Малевич'},
+  {c:'Искусство',q:'Сколько струн у классической гитары?',o:['4','5','6','7'],a:2,e:'6 струн'},
+  {c:'Искусство',q:'Автор «Девятой симфонии»:',o:['Моцарт','Бетховен','Бах','Шопен'],a:1,e:'Бетховен'},
+  {c:'Искусство',q:'Знаменитый художник-сюрреалист:',o:['Дали','Ван Гог','Моне','Пикассо'],a:0,e:'Сальвадор Дали'},
+  {c:'Искусство',q:'В каком музее «Мона Лиза»?',o:['Эрмитаж','Лувр','Прадо','Уффици'],a:1,e:'Лувр'},
+  {c:'Искусство',q:'Автор «Подсолнухов»:',o:['Моне','Ван Гог','Пикассо','Ренуар'],a:1,e:'Ван Гог'},
+  {c:'Искусство',q:'Балет «Лебединое озеро» написал:',o:['Чайковский','Рахманинов','Мусоргский','Глинка'],a:0,e:'Чайковский'},
+  {c:'Спорт',q:'Сколько игроков в футбольной команде на поле?',o:['9','10','11','12'],a:2,e:'11 игроков'},
+  {c:'Спорт',q:'Как часто проводятся Олимпийские игры?',o:['Каждый год','Раз в 2 года','Раз в 4 года','Раз в 5 лет'],a:2,e:'Раз в 4 года'},
+  {c:'Спорт',q:'Сколько колец на олимпийском флаге?',o:['3','4','5','6'],a:2,e:'5 колец'},
+  {c:'Спорт',q:'В каком виде спорта используется шайба?',o:['Футбол','Хоккей','Теннис','Баскетбол'],a:1,e:'Хоккей'},
+  {c:'Спорт',q:'Размер баскетбольной команды:',o:['4','5','6','7'],a:1,e:'5 игроков'},
+  {c:'Логика',q:'Продолжи ряд: 2, 4, 8, 16, ?',o:['20','24','32','64'],a:2,e:'×2 → 32'},
+  {c:'Логика',q:'Продолжи: 1, 1, 2, 3, 5, 8, ?',o:['11','12','13','15'],a:2,e:'Фибоначчи → 13'},
+  {c:'Логика',q:'Сколько месяцев с 31 днём?',o:['6','7','8','9'],a:1,e:'7 месяцев'},
+  {c:'Логика',q:'Продолжи: A, B, C, D, ?',o:['E','F','G','H'],a:0,e:'E'},
+  {c:'Логика',q:'Если все коты — животные, а Мурка — кот, то Мурка:',o:['Растение','Животное','Птица','Неизвестно'],a:1,e:'Животное'},
 ];
+
 const ENEMY_TYPES = [
   {name:'Гоблин', hp:35,  dmg:6,  speed:2.2, scale:0.85, color:0x5a9e3a, eye:0xffaa00},
-  {name:'Скелет', hp:55,  dmg:9,  speed:2.4, scale:1.0,  color:0xddd8cc, eye:0xff2d55},
+  {name:'Скелет', hp:55,  dmg:9,  speed:2.4, scale:1.0,  color:0xddd8cc, eye:0xc81e3a},
   {name:'Огр',    hp:110, dmg:14, speed:1.6, scale:1.5,  color:0x8a6a3a, eye:0xff8800},
   {name:'Демон',  hp:140, dmg:16, speed:2.0, scale:1.25, color:0xaa2222, eye:0xffdd00},
 ];
@@ -322,394 +548,201 @@ const BOSS_TYPES = {
 };
 const TOTAL_WAVES = 10;
 
-/* ================== ХЕШИРОВАНИЕ ================== */
-async function hashPassword(password){
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'eduknife_salt_v1');
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-/* ================== AUTH UI (SUPABASE) ================== */
+/* ================== AUTH UI ================== */
 let authMode = 'login';
 let currentUser = null;
+const authBtn = document.getElementById('auth-btn');
+const authErr = document.getElementById('auth-error');
+const authInfo = document.getElementById('auth-info');
 
 document.getElementById('tab-login').addEventListener('click', () => {
   authMode = 'login';
   document.getElementById('tab-login').classList.add('active');
   document.getElementById('tab-reg').classList.remove('active');
-  document.getElementById('auth-btn').textContent = 'ВОЙТИ';
-  document.getElementById('auth-error').textContent = '';
-  document.getElementById('auth-info').textContent = '';
+  authBtn.textContent = 'Войти';
+  authErr.textContent = ''; authInfo.textContent = '';
 });
 document.getElementById('tab-reg').addEventListener('click', () => {
   authMode = 'reg';
   document.getElementById('tab-reg').classList.add('active');
   document.getElementById('tab-login').classList.remove('active');
-  document.getElementById('auth-btn').textContent = 'ЗАРЕГИСТРИРОВАТЬСЯ';
-  document.getElementById('auth-error').textContent = '';
-  document.getElementById('auth-info').textContent = '';
+  authBtn.textContent = 'Зарегистрироваться';
+  authErr.textContent = ''; authInfo.textContent = '';
 });
 
-document.getElementById('auth-btn').addEventListener('click', async () => {
+async function doAuth(){
   const login = document.getElementById('inp-login').value.trim();
   const pass = document.getElementById('inp-pass').value;
-  const err = document.getElementById('auth-error');
-  const info = document.getElementById('auth-info');
-  err.textContent = ''; info.textContent = '';
+  authErr.textContent = ''; authInfo.textContent = '';
 
-  if(login.length < 3){ err.textContent = 'Логин минимум 3 символа'; return; }
-  if(pass.length < 4){ err.textContent = 'Пароль минимум 4 символа'; return; }
+  if(login.length < 3){ authErr.textContent = 'Логин минимум 3 символа'; return; }
+  if(pass.length < 4){ authErr.textContent = 'Пароль минимум 4 символа'; return; }
+
+  const originalText = authBtn.textContent;
+  authBtn.disabled = true;
+  authBtn.textContent = 'Подождите...';
 
   try{
     const hash = await hashPassword(pass);
-
     if(authMode === 'reg'){
-      // РЕГИСТРАЦИЯ В SUPABASE
       const { data, error } = await supabaseClient
         .from('players')
         .insert([{ username: login, password_hash: hash, total_score: 0 }])
         .select();
-
       if(error){
-        if(error.code === '23505') err.textContent = 'Такой логин уже занят';
-        else err.textContent = 'Ошибка БД: ' + error.message;
+        if(error.code === '23505') authErr.textContent = 'Такой логин уже занят';
+        else if(error.code === '42P01') authErr.textContent = 'Таблица players не создана в Supabase';
+        else if(error.code === '42501' || error.message?.includes('row-level security')) authErr.textContent = 'RLS блокирует запрос. Разреши insert в Supabase.';
+        else authErr.textContent = 'Ошибка: ' + (error.message || error.code);
         return;
       }
-
       currentUser = { id: data[0].id, login: data[0].username };
-      info.textContent = '✅ Успешно! Добро пожаловать.';
-      setTimeout(startIntro, 500);
+      authInfo.textContent = '✅ Добро пожаловать!';
     } else {
-      // ВХОД ЧЕРЕЗ SUPABASE (используем maybeSingle)
       const { data, error } = await supabaseClient
         .from('players')
         .select('*')
         .eq('username', login)
         .eq('password_hash', hash)
         .maybeSingle();
-
-      if(error || !data){
-        err.textContent = 'Неверный логин или пароль';
+      if(error){
+        if(error.code === '42P01') authErr.textContent = 'Таблица players не создана в Supabase';
+        else authErr.textContent = 'Ошибка БД: ' + (error.message || error.code);
         return;
       }
-
+      if(!data){ authErr.textContent = 'Неверный логин или пароль'; return; }
       currentUser = { id: data.id, login: data.username };
-      info.textContent = '✅ Вход выполнен!';
-      setTimeout(startIntro, 500);
+      authInfo.textContent = '✅ Вход выполнен!';
     }
     localStorage.setItem('eduknife_user', JSON.stringify(currentUser));
+    setTimeout(startIntro, 500);
   }catch(e){
-    err.textContent = 'Ошибка: ' + (e.message || e);
+    console.error(e);
+    authErr.textContent = 'Ошибка: ' + (e.message || 'неизвестно');
+  }finally{
+    authBtn.disabled = false;
+    authBtn.textContent = originalText;
   }
-});
-
+}
+authBtn.addEventListener('click', doAuth);
 document.getElementById('inp-pass').addEventListener('keydown', e => {
-  if(e.key === 'Enter') document.getElementById('auth-btn').click();
+  if(e.key === 'Enter' && !authBtn.disabled) doAuth();
 });
 
-/* ================================================================
-   UNDERTALE-STYLE PIXEL ART СЦЕНЫ
-   ================================================================ */
+/* ================== PIXEL SCENES ================== */
 function createPixelCanvas(scale = 5){
   const c = document.createElement('canvas');
   c.width = 64 * scale; c.height = 64 * scale;
   const g = c.getContext('2d');
   g.imageSmoothingEnabled = false;
-  const px = (x, y, color) => {
-    g.fillStyle = color;
-    g.fillRect(Math.floor(x)*scale, Math.floor(y)*scale, scale, scale);
-  };
-  const rect = (x, y, w, h, color) => {
-    g.fillStyle = color;
-    g.fillRect(Math.floor(x)*scale, Math.floor(y)*scale, Math.max(1,Math.floor(w)*scale), Math.max(1,Math.floor(h)*scale));
-  };
+  const px = (x, y, color) => { g.fillStyle = color; g.fillRect(Math.floor(x)*scale, Math.floor(y)*scale, scale, scale); };
+  const rect = (x, y, w, h, color) => { g.fillStyle = color; g.fillRect(Math.floor(x)*scale, Math.floor(y)*scale, Math.max(1,Math.floor(w)*scale), Math.max(1,Math.floor(h)*scale)); };
   return {canvas: c, px, rect, g};
 }
-
 function sceneCrystal(){
-  const { canvas, px, rect, g } = createPixelCanvas();
+  const { canvas, px, rect } = createPixelCanvas();
   rect(0, 0, 64, 64, '#050510');
-  for(let i=0;i<50;i++){
-    const bright = Math.random() > 0.7;
-    px(Math.random()*64, Math.random()*64, bright ? '#ffffff' : '#445566');
-  }
-  for(let r = 20; r > 14; r--){
-    for(let a = 0; a < Math.PI*2; a += 0.3){
-      const x = 32 + Math.cos(a)*r;
-      const y = 32 + Math.sin(a)*r;
-      if(Math.random() > 0.6) px(x, y, '#112244');
-    }
-  }
+  for(let i=0;i<50;i++){ const b = Math.random() > 0.7; px(Math.random()*64, Math.random()*64, b ? '#ffffff' : '#445566'); }
+  for(let r = 20; r > 14; r--) for(let a = 0; a < Math.PI*2; a += 0.3){ const x = 32 + Math.cos(a)*r, y = 32 + Math.sin(a)*r; if(Math.random() > 0.6) px(x, y, '#112244'); }
   const cx = 32, cy = 32, r = 13;
-  for(let y = -r; y <= r; y++){
-    const w = r - Math.abs(y);
-    for(let x = -w; x < w; x++){
-      const shade = Math.abs(x) / Math.max(1, w);
-      let color;
-      if(shade > 0.75) color = '#2266aa';
-      else if(shade > 0.5) color = '#3388dd';
-      else if(shade > 0.25) color = '#55aaee';
-      else color = '#88ccff';
-      px(cx + x, cy + y, color);
-    }
-  }
-  for(let y = -r; y < 0; y++){
-    const w = r - Math.abs(y);
-    for(let x = -w; x < 0; x++){
-      if(Math.random() > 0.5) px(cx + x, cy + y, '#aaddff');
-    }
-  }
-  px(cx - 4, cy - 5, '#ffffff');
-  px(cx - 3, cy - 5, '#ffffff');
-  px(cx - 4, cy - 4, '#ffffff');
-  px(cx - 2, cy - 3, '#ffffff');
+  for(let y = -r; y <= r; y++){ const w = r - Math.abs(y); for(let x = -w; x < w; x++){ const s = Math.abs(x) / Math.max(1, w); let c; if(s > 0.75) c = '#2266aa'; else if(s > 0.5) c = '#3388dd'; else if(s > 0.25) c = '#55aaee'; else c = '#88ccff'; px(cx + x, cy + y, c); } }
+  px(cx - 4, cy - 5, '#ffffff'); px(cx - 3, cy - 5, '#ffffff'); px(cx - 4, cy - 4, '#ffffff'); px(cx - 2, cy - 3, '#ffffff');
   return canvas;
 }
-
 function sceneMages(){
   const { canvas, px, rect } = createPixelCanvas();
   rect(0, 0, 64, 64, '#0a0515');
   for(let i=0;i<25;i++) px(Math.random()*64, Math.random()*22, '#ffffff');
-  const positions = [14, 32, 50];
-  positions.forEach((fx, i) => {
-    for(let y = 0; y < 22; y++){
-      const w = Math.max(0, 7 - y * 0.28);
-      const left = Math.floor(fx - w);
-      const right = Math.ceil(fx + w);
-      for(let x = left; x < right; x++){
-        const shade = (y > 8 && x < fx) ? '#1a0a2a' : '#2a1a4a';
-        px(x, 42 + y, shade);
-      }
-    }
-    rect(fx - 5, 48, 10, 1, '#ffcc44');
-    rect(fx - 2, 36, 4, 5, '#d4a574');
-    rect(fx - 3, 35, 6, 1, '#1a0a2a');
-    rect(fx - 3, 34, 1, 1, '#1a0a2a');
-    rect(fx + 2, 34, 1, 1, '#1a0a2a');
-    rect(fx + 5, 28, 1, 32, '#885522');
-    rect(fx + 4, 26, 3, 3, '#ffcc44');
-    px(fx + 4, 26, '#ffeeaa');
-    px(fx + 5, 25, '#ffeeaa');
-    if(Math.random() > 0.5){
-      px(fx + 3 + Math.random()*3, 24 + Math.random()*3, '#ffaa44');
-    }
+  [14, 32, 50].forEach((fx) => {
+    for(let y = 0; y < 22; y++){ const w = Math.max(0, 7 - y * 0.28); for(let x = Math.floor(fx-w); x < Math.ceil(fx+w); x++){ const s = (y > 8 && x < fx) ? '#1a0a2a' : '#2a1a4a'; px(x, 42 + y, s); } }
+    rect(fx - 5, 48, 10, 1, '#ffcc44'); rect(fx - 2, 36, 4, 5, '#d4a574');
+    rect(fx - 3, 35, 6, 1, '#1a0a2a'); rect(fx + 5, 28, 1, 32, '#885522');
+    rect(fx + 4, 26, 3, 3, '#ffcc44'); px(fx + 4, 26, '#ffeeaa'); px(fx + 5, 25, '#ffeeaa');
   });
-  const cx = 32, cy = 14;
-  for(let y = -5; y <= 5; y++){
-    const w = 5 - Math.abs(y);
-    for(let x = -w; x < w; x++){
-      px(cx + x, cy + y, Math.abs(x) > w-2 ? '#2266aa' : '#66bbff');
-    }
-  }
-  px(cx - 1, cy - 2, '#ffffff');
-  px(cx, cy - 1, '#ffffff');
   return canvas;
 }
-
 function sceneDragon(){
   const { canvas, px, rect } = createPixelCanvas();
   rect(0, 0, 64, 64, '#1a0005');
-  for(let i=0;i<60;i++){
-    const x = Math.random()*64, y = 46 + Math.random()*18;
-    const c = Math.random() > 0.5 ? '#ff4400' : (Math.random() > 0.5 ? '#ffaa00' : '#ffdd44');
-    px(x, y, c);
-  }
-  rect(18, 26, 28, 18, '#2a0000');
-  rect(16, 30, 32, 12, '#2a0000');
-  rect(24, 12, 16, 14, '#3a0000');
-  rect(22, 20, 20, 6, '#2a0000');
-  px(26, 23, '#000000');
-  px(36, 23, '#000000');
-  px(27, 16, '#ff0000');
-  px(28, 16, '#ff0000');
-  px(35, 16, '#ff0000');
-  px(36, 16, '#ff0000');
-  px(27, 17, '#ff4400');
-  px(36, 17, '#ff4400');
-  for(let i = 0; i < 6; i++){
-    px(24 + i*3, 26, '#eeeeee');
-    px(25 + i*3, 26, '#cccccc');
-  }
-  rect(26, 6, 2, 6, '#0a0000');
-  rect(36, 6, 2, 6, '#0a0000');
-  px(26, 5, '#1a0000');
-  px(37, 5, '#1a0000');
-  for(let i = 0; i < 12; i++){
-    const y = 20 + i;
-    const leftX = 18 - i * 0.8;
-    const rightX = 46 + i * 0.8;
-    if(y < 42){
-      px(leftX, y, '#3a0000');
-      px(leftX - 1, y, '#2a0000');
-      px(rightX, y, '#3a0000');
-      px(rightX + 1, y, '#2a0000');
-    }
-  }
-  for(let i = 0; i < 15; i++){
-    px(46 + i * 0.7, 42 - i * 0.2, '#3a0000');
-    px(46 + i * 0.7, 43 - i * 0.2, '#2a0000');
-  }
+  for(let i=0;i<60;i++){ const x = Math.random()*64, y = 46 + Math.random()*18; const c = Math.random() > 0.5 ? '#ff4400' : (Math.random() > 0.5 ? '#ffaa00' : '#ffdd44'); px(x, y, c); }
+  rect(18, 26, 28, 18, '#2a0000'); rect(16, 30, 32, 12, '#2a0000');
+  rect(24, 12, 16, 14, '#3a0000'); rect(22, 20, 20, 6, '#2a0000');
+  px(27, 16, '#ff0000'); px(28, 16, '#ff0000'); px(35, 16, '#ff0000'); px(36, 16, '#ff0000');
+  for(let i = 0; i < 6; i++){ px(24 + i*3, 26, '#eeeeee'); px(25 + i*3, 26, '#cccccc'); }
   return canvas;
 }
-
 function sceneBroken(){
   const { canvas, px, rect } = createPixelCanvas();
   rect(0, 0, 64, 64, '#050510');
-  for(let i=0;i<20;i++){
-    const x = Math.random()*64;
-    const y = Math.random()*64;
-    const sz = 1 + Math.random()*2;
-    rect(x, y, sz, sz, '#2266aa');
-    if(Math.random() > 0.5) px(x, y, '#55aaee');
-  }
+  for(let i=0;i<20;i++){ const x = Math.random()*64, y = Math.random()*64, sz = 1 + Math.random()*2; rect(x, y, sz, sz, '#2266aa'); if(Math.random() > 0.5) px(x, y, '#55aaee'); }
   rect(24, 24, 16, 16, '#000000');
-  for(let i=0;i<8;i++){
-    px(26 + Math.random()*12, 26 + Math.random()*12, '#112244');
-  }
-  for(let i=0;i<10;i++){
-    px(Math.random()*64, Math.random()*64, '#331155');
-  }
   return canvas;
 }
-
 function sceneHero(){
   const { canvas, px, rect } = createPixelCanvas();
   rect(0, 0, 64, 64, '#0a0515');
   for(let i=0;i<40;i++) px(Math.random()*64, Math.random()*30, Math.random() > 0.5 ? '#ffffff' : '#556688');
   rect(0, 52, 64, 12, '#1a1020');
-  rect(28, 52, 10, 1, '#2a1a3a');
-  rect(29, 48, 2, 4, '#2a1a3a');
-  rect(33, 48, 2, 4, '#2a1a3a');
-  for(let y = 0; y < 10; y++){
-    const w = 4 + y * 0.15;
-    rect(32 - w, 38 + y, w*2, 1, '#3a2a4a');
-  }
-  rect(30, 32, 4, 6, '#d4a574');
-  rect(29, 32, 6, 1, '#3a1a0a');
-  px(29, 33, '#3a1a0a');
-  rect(28, 38, 8, 1, '#2a1a3a');
-  rect(38, 30, 1, 18, '#dddddd');
-  rect(38, 30, 1, 1, '#ffffff');
-  rect(37, 30, 3, 1, '#88ccff');
-  rect(37, 47, 3, 1, '#885522');
-  rect(38, 48, 1, 3, '#5a2a10');
-  for(let i=0;i<5;i++){
-    px(38 + (Math.random()-0.5)*4, 30 + Math.random()*18, '#66ddff');
-  }
-  px(32, 28, '#88ccff');
-  px(31, 28, '#55aaee');
-  px(33, 28, '#55aaee');
-  px(32, 27, '#aaddff');
-  px(32, 29, '#aaddff');
-  for(let i=0;i<6;i++){
-    const a = Math.random()*Math.PI*2;
-    px(32 + Math.cos(a)*3, 28 + Math.sin(a)*2, '#112244');
-  }
+  for(let y = 0; y < 10; y++){ const w = 4 + y * 0.15; rect(32 - w, 38 + y, w*2, 1, '#3a2a4a'); }
+  rect(30, 32, 4, 6, '#d4a574'); rect(28, 38, 8, 1, '#2a1a3a');
+  rect(38, 30, 1, 18, '#dddddd'); rect(37, 30, 3, 1, '#88ccff'); rect(37, 47, 3, 1, '#885522');
+  px(32, 28, '#88ccff'); px(31, 28, '#55aaee'); px(33, 28, '#55aaee'); px(32, 27, '#aaddff'); px(32, 29, '#aaddff');
   return canvas;
 }
-
 function sceneVictory(){
   const { canvas, px, rect } = createPixelCanvas();
   rect(0, 0, 64, 64, '#1a0a25');
-  for(let a = 0; a < Math.PI*2; a += Math.PI/20){
-    for(let r = 8; r < 30; r++){
-      const c = r < 18 ? '#ffdd88' : (r < 24 ? '#ffaa44' : '#aa5500');
-      px(32 + Math.cos(a)*r, 32 + Math.sin(a)*r, c);
-    }
-  }
+  for(let a = 0; a < Math.PI*2; a += Math.PI/20) for(let r = 8; r < 30; r++){ const c = r < 18 ? '#ffdd88' : (r < 24 ? '#ffaa44' : '#aa5500'); px(32 + Math.cos(a)*r, 32 + Math.sin(a)*r, c); }
   const cx = 32, cy = 32, r = 10;
-  for(let y = -r; y <= r; y++){
-    const w = r - Math.abs(y);
-    for(let x = -w; x < w; x++){
-      const shade = Math.abs(x) / Math.max(1, w);
-      let color;
-      if(shade > 0.75) color = '#3388dd';
-      else if(shade > 0.4) color = '#66bbff';
-      else color = '#aaddff';
-      px(cx + x, cy + y, color);
-    }
-  }
-  px(cx - 3, cy - 4, '#ffffff');
-  px(cx - 2, cy - 4, '#ffffff');
-  px(cx - 3, cy - 3, '#ffffff');
-  for(let i=0;i<20;i++){
-    const x = Math.random()*64, y = Math.random()*64;
-    if(Math.hypot(x-32, y-32) > 20) px(x, y, '#ffffff');
-  }
+  for(let y = -r; y <= r; y++){ const w = r - Math.abs(y); for(let x = -w; x < w; x++){ const s = Math.abs(x) / Math.max(1, w); let c; if(s > 0.75) c = '#3388dd'; else if(s > 0.4) c = '#66bbff'; else c = '#aaddff'; px(cx + x, cy + y, c); } }
   return canvas;
 }
 
-/* ================== STORY (UNDERTALE-STYLE) ================== */
+/* ================== STORY / OUTRO ================== */
 const STORY_SCENES = [
-  { fn: sceneCrystal,
-    text: `Давным-давно в королевстве Знаний\nжил великий орден мудрецов.\n\nОни хранили Кристалл Истины —\nисточник света и мудрости.` },
-  { fn: sceneMages,
-    text: `Мудрецы оберегали Кристалл\nмного веков.\n\nОни передавали знания\nиз поколения в поколение,\nчтобы тьма не смогла вернуться.` },
-  { fn: sceneDragon,
-    text: `Но однажды из глубин забвения\nпробудился Древний Дракон Невежества.\n\nОн похитил Кристалл\nи разбил его на тысячи осколков.` },
-  { fn: sceneBroken,
-    text: `Тьма покрыла королевство.\n\nЗнания были утрачены.\n\nНадежда почти угасла.` },
-  { fn: sceneHero,
-    text: `Но остался один —\nпоследний ученик ордена.\n\nТот, кто сможет пройти\nчерез десять волн тьмы\nи вернуть свет.` },
+  { fn: sceneCrystal, text: `Давным-давно в королевстве Знаний\nжил великий орден мудрецов.\n\nОни хранили Кристалл Истины —\nисточник света и мудрости.` },
+  { fn: sceneMages, text: `Мудрецы оберегали Кристалл\nмного веков.\n\nОни передавали знания\nиз поколения в поколение,\nчтобы тьма не смогла вернуться.` },
+  { fn: sceneDragon, text: `Но однажды из глубин забвения\nпробудился Древний Дракон Невежества.\n\nОн похитил Кристалл\nи разбил его на тысячи осколков.` },
+  { fn: sceneBroken, text: `Тьма покрыла королевство.\n\nЗнания были утрачены.\n\nНадежда почти угасла.` },
+  { fn: sceneHero, text: `Но остался один —\nпоследний ученик ордена.\n\nТот, кто сможет пройти\nчерез десять волн тьмы\nи вернуть свет.` },
 ];
-
 const OUTRO_SCENES = [
-  { fn: sceneVictory,
-    text: `Кристалл Истины восстановлен.\n\nДревний Дракон Невежества пал.\n\nКоролевство Знаний\nвновь озарено светом.` },
-  { fn: sceneCrystal,
-    text: `Но запомни, юный мудрец:\n\nТьма всегда найдёт путь обратно.\n\nЕдинственная защита — знание.` },
-  { fn: sceneHero,
-    text: `Учись. Познавай. Расти.\n\nИбо знание — сильнейший клинок.\n\n\nКОНЕЦ.` },
+  { fn: sceneVictory, text: `Кристалл Истины восстановлен.\n\nДревний Дракон Невежества пал.\n\nКоролевство Знаний\nвновь озарено светом.` },
+  { fn: sceneCrystal, text: `Но запомни, юный мудрец:\n\nТьма всегда найдёт путь обратно.\n\nЕдинственная защита — знание.` },
+  { fn: sceneHero, text: `Учись. Познавай. Расти.\n\nИбо знание — сильнейший клинок.\n\n\nКОНЕЦ.` },
 ];
 
-let storyIdx = 0;
-let storyTyping = false;
-let storyTimer = null;
-
+let storyIdx = 0, storyTyping = false, storyTimer = null;
 function showStoryScene(idx){
   const scene = STORY_SCENES[idx];
   if(!scene){ finishStory(); return; }
   const container = document.getElementById('story-canvas');
   container.style.opacity = 0;
   const newCanvas = scene.fn();
-  setTimeout(() => {
-    container.innerHTML = '';
-    container.appendChild(newCanvas);
-    container.style.opacity = 1;
-  }, 150);
-
+  setTimeout(() => { container.innerHTML = ''; container.appendChild(newCanvas); container.style.opacity = 1; }, 150);
   document.getElementById('story-text').textContent = '';
   document.getElementById('story-prompt').classList.remove('show');
   storyTyping = true;
   let i = 0;
   clearInterval(storyTimer);
   storyTimer = setInterval(() => {
-    if(i < scene.text.length){
-      document.getElementById('story-text').textContent += scene.text[i];
-      i++;
-    } else {
-      clearInterval(storyTimer);
-      storyTyping = false;
-      document.getElementById('story-prompt').classList.add('show');
-    }
+    if(i < scene.text.length){ document.getElementById('story-text').textContent += scene.text[i]; i++; }
+    else { clearInterval(storyTimer); storyTyping = false; document.getElementById('story-prompt').classList.add('show'); }
   }, 22);
 }
-
 function startIntro(){
   document.getElementById('auth').style.display = 'none';
   document.getElementById('story').classList.add('show');
   storyIdx = 0;
   showStoryScene(0);
 }
-
 function finishStory(){
   document.getElementById('story').classList.remove('show');
   document.getElementById('start').classList.add('show');
   document.getElementById('user-badge').classList.add('show');
   document.getElementById('user-badge').innerHTML = '🧙 <b>' + escapeHtml(currentUser.login) + '</b>';
+  initMenuParticles();
 }
-
 document.getElementById('story').addEventListener('click', () => {
   if(storyTyping){
     clearInterval(storyTimer);
@@ -722,40 +755,22 @@ document.getElementById('story').addEventListener('click', () => {
   if(storyIdx >= STORY_SCENES.length) finishStory();
   else showStoryScene(storyIdx);
 });
-
 document.addEventListener('keydown', e => {
   if(document.getElementById('story').classList.contains('show')){
-    if(e.key === ' ' || e.key === 'Enter'){
-      e.preventDefault();
-      document.getElementById('story').click();
-    }
-    if(e.key === 'Escape'){
-      e.preventDefault();
-      storyIdx = STORY_SCENES.length;
-      finishStory();
-    }
+    if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); document.getElementById('story').click(); }
+    if(e.key === 'Escape'){ e.preventDefault(); storyIdx = STORY_SCENES.length; finishStory(); }
   }
 });
-
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-/* ================== OUTRO ================== */
-let outroIdx = 0;
-let outroTyping = false;
-let outroTimer = null;
-
+let outroIdx = 0, outroTyping = false, outroTimer = null;
 function showOutroScene(idx){
   const scene = OUTRO_SCENES[idx];
   if(!scene){ finishOutro(); return; }
   const container = document.getElementById('outro-canvas');
   container.style.opacity = 0;
   const newCanvas = scene.fn();
-  setTimeout(() => {
-    container.innerHTML = '';
-    container.appendChild(newCanvas);
-    container.style.opacity = 1;
-  }, 150);
-
+  setTimeout(() => { container.innerHTML = ''; container.appendChild(newCanvas); container.style.opacity = 1; }, 150);
   document.getElementById('outro-text').textContent = '';
   document.getElementById('outro-prompt').classList.remove('show');
   document.getElementById('outro-btn').classList.remove('show');
@@ -763,58 +778,37 @@ function showOutroScene(idx){
   let i = 0;
   clearInterval(outroTimer);
   outroTimer = setInterval(() => {
-    if(i < scene.text.length){
-      document.getElementById('outro-text').textContent += scene.text[i];
-      i++;
-    } else {
-      clearInterval(outroTimer);
-      outroTyping = false;
-      document.getElementById('outro-prompt').classList.add('show');
-    }
+    if(i < scene.text.length){ document.getElementById('outro-text').textContent += scene.text[i]; i++; }
+    else { clearInterval(outroTimer); outroTyping = false; document.getElementById('outro-prompt').classList.add('show'); }
   }, 28);
 }
-
 function showOutro(){
   document.getElementById('hud').classList.remove('show');
   document.getElementById('crosshair').classList.remove('show');
   document.getElementById('outro').classList.add('show');
   outroIdx = 0;
   showOutroScene(0);
-  // Сохраняем рекорд В SUPABASE
   if(currentUser){
-    supabaseClient.from('players').update({ total_score: G.score }).eq('id', currentUser.id).then(({error}) => {
-      if(error) console.error('Ошибка сохранения:', error);
-      else console.log('Счет сохранен в облако!');
-    });
+    supabaseClient.from('players').update({ total_score: G.score }).eq('id', currentUser.id).then(({error}) => { if(error) console.error(error); });
   }
 }
-
 function finishOutro(){
   document.getElementById('outro-prompt').classList.remove('show');
   document.getElementById('outro-btn').classList.add('show');
 }
-
 document.getElementById('outro').addEventListener('click', (e) => {
   if(e.target.id === 'outro-btn') return;
-  if(outroTyping){
-    clearInterval(outroTimer);
-    document.getElementById('outro-text').textContent = OUTRO_SCENES[outroIdx].text;
-    outroTyping = false;
-    document.getElementById('outro-prompt').classList.add('show');
-    return;
-  }
+  if(outroTyping){ clearInterval(outroTimer); document.getElementById('outro-text').textContent = OUTRO_SCENES[outroIdx].text; outroTyping = false; document.getElementById('outro-prompt').classList.add('show'); return; }
   outroIdx++;
   if(outroIdx >= OUTRO_SCENES.length) finishOutro();
   else showOutroScene(outroIdx);
 });
-
 document.getElementById('outro-btn').addEventListener('click', (e) => {
   e.stopPropagation();
   document.getElementById('outro').classList.remove('show');
   document.getElementById('start').classList.add('show');
   document.getElementById('user-badge').classList.add('show');
-  G.gameStarted = false;
-  G.gameOver = false;
+  G.gameStarted = false; G.gameOver = false;
 });
 
 /* ================== THREE SETUP ================== */
@@ -856,20 +850,13 @@ window.addEventListener('resize', () => {
 
 /* ================== ARENA ================== */
 const collisionBoxes = [];
-function addBox(cx, cy, cz, sx, sy, sz){
-  collisionBoxes.push({min:{x:cx-sx/2,y:cy-sy/2,z:cz-sz/2}, max:{x:cx+sx/2,y:cy+sy/2,z:cz+sz/2}});
-}
+function addBox(cx, cy, cz, sx, sy, sz){ collisionBoxes.push({min:{x:cx-sx/2,y:cy-sy/2,z:cz-sz/2}, max:{x:cx+sx/2,y:cy+sy/2,z:cz+sz/2}}); }
 function makeStoneTexture(c1, c2, tx=8, ty=8){
   const c = document.createElement('canvas'); c.width = c.height = 512;
   const g = c.getContext('2d');
   g.fillStyle = c1; g.fillRect(0,0,512,512);
   const tw = 512/tx, th = 512/ty;
-  for(let y=0;y<ty;y++) for(let x=0;x<tx;x++){
-    const v = Math.random();
-    g.fillStyle = v > 0.5 ? c2 : c1;
-    g.globalAlpha = 0.5 + v*0.5;
-    g.fillRect(x*tw+2, y*th+2, tw-4, th-4);
-  }
+  for(let y=0;y<ty;y++) for(let x=0;x<tx;x++){ const v = Math.random(); g.fillStyle = v > 0.5 ? c2 : c1; g.globalAlpha = 0.5 + v*0.5; g.fillRect(x*tw+2, y*th+2, tw-4, th-4); }
   g.globalAlpha = 1;
   for(let i=0;i<400;i++){ g.fillStyle = `rgba(0,0,0,${Math.random()*0.35})`; g.fillRect(Math.random()*512, Math.random()*512, 2, 2); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
@@ -943,36 +930,22 @@ function updateTorches(t){
 /* ================== VIEWMODEL ================== */
 const viewmodel = new THREE.Group();
 camera.add(viewmodel);
-
 function buildSword(){
   const g = new THREE.Group();
   const bladeShape = new THREE.Shape();
-  bladeShape.moveTo(-0.06, 0); bladeShape.lineTo(0.06, 0);
-  bladeShape.lineTo(0.045, 1.0); bladeShape.lineTo(0, 1.2);
-  bladeShape.lineTo(-0.045, 1.0); bladeShape.lineTo(-0.06, 0);
+  bladeShape.moveTo(-0.06, 0); bladeShape.lineTo(0.06, 0); bladeShape.lineTo(0.045, 1.0); bladeShape.lineTo(0, 1.2); bladeShape.lineTo(-0.045, 1.0); bladeShape.lineTo(-0.06, 0);
   const bladeGeo = new THREE.ExtrudeGeometry(bladeShape, {depth:0.014, bevelEnabled:true, bevelSize:0.008, bevelThickness:0.008, bevelSegments:2});
   const bladeMat = new THREE.MeshStandardMaterial({color:0xf0f5ff, metalness:0.95, roughness:0.08, emissive:0x334488, emissiveIntensity:0.35});
-  const blade = new THREE.Mesh(bladeGeo, bladeMat);
-  blade.position.z = -0.007; g.add(blade);
+  const blade = new THREE.Mesh(bladeGeo, bladeMat); blade.position.z = -0.007; g.add(blade);
   const fuller = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.9, 0.018), new THREE.MeshBasicMaterial({color:0x66ddff}));
   fuller.position.y = 0.55; fuller.position.z = 0.008; g.add(fuller);
   const goldMat = new THREE.MeshStandardMaterial({color:0xffcc44, metalness:0.9, roughness:0.2, emissive:0x884400, emissiveIntensity:0.4});
-  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.09, 0.12), goldMat);
-  guard.position.y = -0.02; g.add(guard);
-  for(const sx of [-1,1]){
-    const orb = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), goldMat);
-    orb.position.set(sx*0.21, -0.02, 0); g.add(orb);
-  }
+  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.09, 0.12), goldMat); guard.position.y = -0.02; g.add(guard);
+  for(const sx of [-1,1]){ const orb = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), goldMat); orb.position.set(sx*0.21, -0.02, 0); g.add(orb); }
   const handleMat = new THREE.MeshStandardMaterial({color:0x5a2a10, roughness:0.85});
-  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.32, 12), handleMat);
-  handle.position.y = -0.22; g.add(handle);
-  for(let i=0;i<4;i++){
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.01, 6, 14), goldMat);
-    ring.rotation.x = Math.PI/2;
-    ring.position.y = -0.11 - i*0.07; g.add(ring);
-  }
-  const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 12), goldMat);
-  pommel.position.y = -0.4; g.add(pommel);
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.32, 12), handleMat); handle.position.y = -0.22; g.add(handle);
+  for(let i=0;i<4;i++){ const ring = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.01, 6, 14), goldMat); ring.rotation.x = Math.PI/2; ring.position.y = -0.11 - i*0.07; g.add(ring); }
+  const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 12), goldMat); pommel.position.y = -0.4; g.add(pommel);
   return g;
 }
 function buildHands(){
@@ -983,13 +956,11 @@ function buildHands(){
   const rHand = new THREE.Group();
   const rFist = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.15, 0.12), skinMat); rHand.add(rFist);
   const rTop = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), skinMat); rTop.position.y = 0.06; rTop.scale.set(1, 0.6, 0.9); rHand.add(rTop);
-  const rThumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.03, 0.09, 3, 6), skinMat); rThumb.position.set(0, 0, -0.08); rThumb.rotation.x = 0.4; rHand.add(rThumb);
   const rCuff = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.07, 0.09, 10), darkMat); rCuff.position.y = -0.12; rHand.add(rCuff);
   const rFore = new THREE.Mesh(new THREE.CapsuleGeometry(0.075, 0.5, 6, 10), sleeveMat); rFore.position.set(0.05, -0.5, 0.06); rFore.rotation.set(0.25, 0, 0.15); rHand.add(rFore);
   g.add(rHand);
   const lHand = new THREE.Group();
   const lFist = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.14, 0.11), skinMat); lHand.add(lFist);
-  const lThumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.028, 0.08, 3, 6), skinMat); lThumb.position.set(0, 0, -0.075); lThumb.rotation.x = 0.4; lHand.add(lThumb);
   const lCuff = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.08, 10), darkMat); lCuff.position.y = -0.1; lHand.add(lCuff);
   const lFore = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.45, 6, 10), sleeveMat); lFore.position.set(-0.05, -0.45, 0.06); lFore.rotation.set(0.3, 0, -0.15); lHand.add(lFore);
   g.add(lHand);
@@ -1004,15 +975,13 @@ hands.rightArm.rotation.y = 0.15;
 hands.leftArm.position.set(0, -0.28, 0);
 hands.leftArm.rotation.y = -0.15;
 
-/* ================== ANIMATION ================== */
+/* ================== ANIM ================== */
 const IDLE_POS = new THREE.Vector3(0.35, -0.42, -0.65);
 const IDLE_QUAT = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.15, 0.15, -0.1));
 const BLOCK_POS = new THREE.Vector3(0.15, -0.35, -0.75);
 const BLOCK_QUAT = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.4, 0.9, 0.1));
-
 function q(rx, ry, rz){ return new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz)); }
 function v(x, y, z){ return new THREE.Vector3(x, y, z); }
-
 const SWING = {
   duration: 0.65,
   keys: [
@@ -1025,48 +994,29 @@ const SWING = {
 };
 function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
 function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
-
-let swingTime = -1;
-let blockProgress = 0;
+let swingTime = -1, blockProgress = 0;
 function startSwing(){ swingTime = 0; }
-
 function updateSwordAnimation(dt){
   const targetBlock = blocking ? 1 : 0;
   blockProgress += (targetBlock - blockProgress) * (1 - Math.exp(-14 * dt));
-
   if(blockProgress > 0.05){
     viewmodel.position.lerpVectors(IDLE_POS, BLOCK_POS, blockProgress);
-    const bq = IDLE_QUAT.clone().slerp(BLOCK_QUAT, blockProgress);
-    viewmodel.quaternion.copy(bq);
+    viewmodel.quaternion.copy(IDLE_QUAT.clone().slerp(BLOCK_QUAT, blockProgress));
     return;
   }
-
   if(swingTime >= 0){
     swingTime += dt;
     const prog = Math.min(swingTime / SWING.duration, 1);
     let a = SWING.keys[0], b = SWING.keys[1];
-    for(let i=0;i<SWING.keys.length-1;i++){
-      if(prog >= SWING.keys[i].t && prog <= SWING.keys[i+1].t){
-        a = SWING.keys[i]; b = SWING.keys[i+1]; break;
-      }
-    }
+    for(let i=0;i<SWING.keys.length-1;i++){ if(prog >= SWING.keys[i].t && prog <= SWING.keys[i+1].t){ a = SWING.keys[i]; b = SWING.keys[i+1]; break; } }
     const k = (prog - a.t) / Math.max(b.t - a.t, 0.001);
     const ease = (a.t >= 0.19 && a.t < 0.21) ? easeOutCubic(k) : easeInOutCubic(k);
     viewmodel.position.copy(a.p).lerp(b.p, ease);
-    const qq = a.q.clone().slerp(b.q, ease);
-    viewmodel.quaternion.copy(qq);
-    if(prog >= 1){
-      swingTime = -1;
-      viewmodel.position.copy(IDLE_POS);
-      viewmodel.quaternion.copy(IDLE_QUAT);
-    }
+    viewmodel.quaternion.copy(a.q.clone().slerp(b.q, ease));
+    if(prog >= 1){ swingTime = -1; viewmodel.position.copy(IDLE_POS); viewmodel.quaternion.copy(IDLE_QUAT); }
   } else {
     const t = performance.now() * 0.001;
-    viewmodel.position.set(
-      IDLE_POS.x + Math.sin(t*1.8)*0.01,
-      IDLE_POS.y + Math.sin(t*2.3)*0.015,
-      IDLE_POS.z
-    );
+    viewmodel.position.set(IDLE_POS.x + Math.sin(t*1.8)*0.01, IDLE_POS.y + Math.sin(t*2.3)*0.015, IDLE_POS.z);
     const idleQ = IDLE_QUAT.clone().multiply(q(Math.sin(t*2.1)*0.02, Math.sin(t*1.5)*0.015, Math.sin(t*2.7)*0.02));
     viewmodel.quaternion.copy(idleQ);
   }
@@ -1094,7 +1044,7 @@ function updateParticles(dt){
   }
 }
 
-/* ================== ENEMIES ================== */
+/* ================== ENEMY MODELS ================== */
 function buildEnemyModel(typeIdx){
   const t = ENEMY_TYPES[typeIdx];
   const g = new THREE.Group();
@@ -1105,18 +1055,9 @@ function buildEnemyModel(typeIdx){
   body.scale.set(1, 1.2, 0.9); body.position.y = 0.9; body.castShadow = true; g.add(body);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.33, 14, 14), skinMat);
   head.position.y = 1.62; head.castShadow = true; g.add(head);
-  for(const sx of [-1,1]){
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 6), eyeMat);
-    eye.position.set(sx*0.13, 1.66, 0.28); g.add(eye);
-  }
-  for(const sx of [-1,1]){
-    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.45, 4, 6), skinMat);
-    arm.position.set(sx*0.5, 0.95, 0); arm.rotation.z = sx*0.25; arm.castShadow = true; g.add(arm);
-  }
-  for(const sx of [-1,1]){
-    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.4, 4, 6), darkMat);
-    leg.position.set(sx*0.2, 0.32, 0); leg.castShadow = true; g.add(leg);
-  }
+  for(const sx of [-1,1]){ const eye = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 6), eyeMat); eye.position.set(sx*0.13, 1.66, 0.28); g.add(eye); }
+  for(const sx of [-1,1]){ const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.45, 4, 6), skinMat); arm.position.set(sx*0.5, 0.95, 0); arm.rotation.z = sx*0.25; arm.castShadow = true; g.add(arm); }
+  for(const sx of [-1,1]){ const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.4, 4, 6), darkMat); leg.position.set(sx*0.2, 0.32, 0); leg.castShadow = true; g.add(leg); }
   g.scale.setScalar(t.scale);
   return g;
 }
@@ -1127,46 +1068,22 @@ function buildBossModel(kind){
   const darkMat = new THREE.MeshStandardMaterial({color: 0x1a0a0a, roughness: 0.9});
   const eyeMat = new THREE.MeshBasicMaterial({color: t.eye});
   if(kind === 'golem'){
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.8, 1.0), skinMat);
-    body.position.y = 1.6; body.castShadow = true; g.add(body);
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 0.8), skinMat);
-    head.position.y = 2.85; head.castShadow = true; g.add(head);
-    for(const sx of [-1,1]){
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), eyeMat);
-      eye.position.set(sx*0.25, 2.9, 0.42); g.add(eye);
-    }
-    for(const sx of [-1,1]){
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.4, 0.4), skinMat);
-      arm.position.set(sx*0.85, 1.7, 0); arm.castShadow = true; g.add(arm);
-    }
-    for(const sx of [-1,1]){
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.8, 0.5), darkMat);
-      leg.position.set(sx*0.3, 0.4, 0); leg.castShadow = true; g.add(leg);
-    }
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.8, 1.0), skinMat); body.position.y = 1.6; body.castShadow = true; g.add(body);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 0.8), skinMat); head.position.y = 2.85; head.castShadow = true; g.add(head);
+    for(const sx of [-1,1]){ const eye = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), eyeMat); eye.position.set(sx*0.25, 2.9, 0.42); g.add(eye); }
+    for(const sx of [-1,1]){ const arm = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.4, 0.4), skinMat); arm.position.set(sx*0.85, 1.7, 0); arm.castShadow = true; g.add(arm); }
+    for(const sx of [-1,1]){ const leg = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.8, 0.5), darkMat); leg.position.set(sx*0.3, 0.4, 0); leg.castShadow = true; g.add(leg); }
   } else {
-    const body = new THREE.Mesh(new THREE.SphereGeometry(1.0, 16, 16), skinMat);
-    body.scale.set(1.2, 0.9, 1.4); body.position.y = 1.4; body.castShadow = true; g.add(body);
-    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 1.4, 10), skinMat);
-    neck.position.set(0, 2.6, 0.8); neck.rotation.x = -0.4; neck.castShadow = true; g.add(neck);
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 1.1), skinMat);
-    head.position.set(0, 3.3, 1.5); head.castShadow = true; g.add(head);
-    for(const sx of [-1,1]){
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), eyeMat);
-      eye.position.set(sx*0.23, 3.4, 1.75); g.add(eye);
-    }
-    for(const sx of [-1,1]){
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.0, 8), skinMat);
-      leg.position.set(sx*0.55, 0.5, 0.3); leg.castShadow = true; g.add(leg);
-    }
+    const body = new THREE.Mesh(new THREE.SphereGeometry(1.0, 16, 16), skinMat); body.scale.set(1.2, 0.9, 1.4); body.position.y = 1.4; body.castShadow = true; g.add(body);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 1.4, 10), skinMat); neck.position.set(0, 2.6, 0.8); neck.rotation.x = -0.4; neck.castShadow = true; g.add(neck);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 1.1), skinMat); head.position.set(0, 3.3, 1.5); head.castShadow = true; g.add(head);
+    for(const sx of [-1,1]){ const eye = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), eyeMat); eye.position.set(sx*0.23, 3.4, 1.75); g.add(eye); }
+    for(const sx of [-1,1]){ const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.0, 8), skinMat); leg.position.set(sx*0.55, 0.5, 0.3); leg.castShadow = true; g.add(leg); }
   }
   g.scale.setScalar(t.scale * 0.5);
   return g;
 }
-
-function enemyRadius(e){
-  return e.isBoss ? 1.4 : 0.5 * e.type.scale;
-}
-
+function enemyRadius(e){ return e.isBoss ? 1.4 : 0.5 * e.type.scale; }
 function enemyResolveCollisions(e){
   const pos = e.group.position;
   const r = enemyRadius(e) * 0.7;
@@ -1185,32 +1102,28 @@ function enemyResolveCollisions(e){
     else if(m === dzB) pos.z = b.max.z + r;
   }
 }
-
 function resolveEnemyEnemy(){
   for(let i=0;i<enemies.length;i++){
-    const a = enemies[i];
-    if(a.dead) continue;
+    const a = enemies[i]; if(a.dead) continue;
     for(let j=i+1;j<enemies.length;j++){
-      const b = enemies[j];
-      if(b.dead) continue;
+      const b = enemies[j]; if(b.dead) continue;
       const dx = b.group.position.x - a.group.position.x;
       const dz = b.group.position.z - a.group.position.z;
       const d2 = dx*dx + dz*dz;
       const minD = (enemyRadius(a) + enemyRadius(b)) * 0.9;
       if(d2 < minD*minD && d2 > 0.0001){
-        const d = Math.sqrt(d2);
-        const overlap = (minD - d) * 0.5;
+        const d = Math.sqrt(d2), overlap = (minD - d) * 0.5;
         const nx = dx / d, nz = dz / d;
-        a.group.position.x -= nx * overlap;
-        a.group.position.z -= nz * overlap;
-        b.group.position.x += nx * overlap;
-        b.group.position.z += nz * overlap;
+        a.group.position.x -= nx * overlap; a.group.position.z -= nz * overlap;
+        b.group.position.x += nx * overlap; b.group.position.z += nz * overlap;
       }
     }
   }
 }
 
 const enemies = [];
+let nextEnemyId = 1;
+
 function spawnWave(waveNum){
   G.wave = waveNum; updateHUD();
   if(waveNum === 5){ spawnBoss('golem'); return; }
@@ -1228,7 +1141,7 @@ function spawnWave(waveNum){
     const bar = document.createElement('div'); bar.className = 'ehp';
     bar.innerHTML = '<div class="ehp-bar"><div class="ehp-fill" style="width:100%"></div></div>';
     document.body.appendChild(bar);
-    enemies.push({group:model, hp:type.hp, maxHp:type.hp, type, typeIdx, dead:false, bar, attackCd:0, bobPhase:Math.random()*Math.PI*2});
+    enemies.push({group:model, hp:type.hp, maxHp:type.hp, type, typeIdx, dead:false, bar, attackCd:0, bobPhase:Math.random()*Math.PI*2, netId: nextEnemyId++});
   }
 }
 function spawnBoss(kind){
@@ -1238,7 +1151,7 @@ function spawnBoss(kind){
   const bar = document.createElement('div'); bar.className = 'ehp';
   bar.innerHTML = '<div class="ehp-bar"><div class="ehp-fill" style="width:100%"></div></div>';
   document.body.appendChild(bar);
-  enemies.push({group:model, hp:t.hp, maxHp:t.hp, type:t, kind, isBoss:true, dead:false, bar, attackCd:0, bobPhase:0});
+  enemies.push({group:model, hp:t.hp, maxHp:t.hp, type:t, kind, isBoss:true, dead:false, bar, attackCd:0, bobPhase:0, netId: nextEnemyId++});
 }
 
 /* ================== STATE ================== */
@@ -1251,7 +1164,6 @@ const G = {
 };
 const QTIME = 15;
 
-/* ================== PHYSICS ================== */
 const PLAYER = {
   pos: new THREE.Vector3(0, 0, 20),
   vel: new THREE.Vector3(0, 0, 0),
@@ -1264,6 +1176,297 @@ const SLIDE_DURATION = 0.6, SLIDE_SPEED = 11, BOUND = 28.5;
 let dashTimeLeft = 0, dashCdLeft = 0, slideTimeLeft = 0, slideCooldown = 0;
 let jumpRequested = false, dashRequested = false;
 let blocking = false;
+
+/* ================== CO-OP LOBBY ================== */
+const lobby = {
+  active: false, code: null, isHost: false,
+  myId: null, myName: null, channel: null,
+  players: new Map(),
+  enemyBroadcastT: 0, playerBroadcastT: 0,
+};
+function generateCode(){ return Math.random().toString(36).substring(2, 8).toUpperCase(); }
+function generateId(){ return Math.random().toString(36).substring(2, 12); }
+function hashColor(id){
+  let h = 0;
+  for(let i=0;i<id.length;i++) h = (h*31 + id.charCodeAt(i)) | 0;
+  const colors = [0x4488ff, 0x44dd88, 0xff8844, 0xff44dd, 0xddaa44, 0xaa44ff];
+  return colors[Math.abs(h) % colors.length];
+}
+function buildRemotePlayer(name, color){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.15 });
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.9, 4, 10), mat);
+  body.position.y = 0.9; body.castShadow = true; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.23, 12, 12), mat);
+  head.position.y = 1.7; head.castShadow = true; g.add(head);
+  const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = 'rgba(10,4,20,0.85)'; ctx.fillRect(0, 0, 256, 64);
+  ctx.strokeStyle = '#d4a574'; ctx.lineWidth = 3; ctx.strokeRect(2, 2, 252, 60);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 30px "Rajdhani", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(name, 128, 32);
+  const tex = new THREE.CanvasTexture(c);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  sprite.position.y = 2.4; sprite.scale.set(2.4, 0.6, 1);
+  g.add(sprite);
+  return g;
+}
+function updateLobbyUI(){
+  const list = document.getElementById('lobby-players-list');
+  list.innerHTML = '';
+  const entries = Array.from(lobby.players.values());
+  if(lobby.isHost && !entries.find(p => p.id === lobby.myId)){
+    entries.unshift({ id: lobby.myId, name: lobby.myName, isHost: true });
+  }
+  entries.sort((a,b) => (b.isHost?1:0) - (a.isHost?1:0));
+  entries.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'lobby-player' + (p.isHost ? ' host' : '') + (p.id === lobby.myId ? ' me' : '');
+    el.innerHTML = `<span class="dot"></span><span class="name">${escapeHtml(p.name)}</span>${p.isHost ? '<span class="tag">Хост</span>' : ''}`;
+    list.appendChild(el);
+  });
+  const startBtn = document.getElementById('lobby-start-game');
+  startBtn.disabled = !lobby.isHost;
+  document.getElementById('lobby-waiting').textContent = lobby.isHost ? 'Ждём друзей…' : 'Ждём старта от хоста…';
+}
+async function createLobby(){
+  lobby.code = generateCode();
+  lobby.myId = generateId();
+  lobby.myName = currentUser.login;
+  lobby.isHost = true;
+  lobby.active = true;
+  lobby.players.clear();
+  await joinChannel();
+}
+async function joinLobbyAsClient(code){
+  lobby.code = code.toUpperCase();
+  lobby.myId = generateId();
+  lobby.myName = currentUser.login;
+  lobby.isHost = false;
+  lobby.active = true;
+  lobby.players.clear();
+  await joinChannel();
+}
+async function joinChannel(){
+  lobby.channel = supabaseClient.channel(`lobby:${lobby.code}`, {
+    config: {
+      presence: { key: lobby.myId },
+      broadcast: { self: false }
+    }
+  });
+  lobby.channel
+    .on('presence', { event: 'sync' }, () => {
+      const state = lobby.channel.presenceState();
+      for(const id of Object.keys(state)){
+        const [p] = state[id];
+        if(id === lobby.myId) continue;
+        let player = lobby.players.get(id);
+        if(!player){
+          player = { id, name: p.name, isHost: p.isHost, pos: new THREE.Vector3(p.x||0, 0, p.z||0), targetPos: new THREE.Vector3(p.x||0, 0, p.z||0), targetYaw: 0, mesh: null, lastSeen: Date.now() };
+          lobby.players.set(id, player);
+        } else {
+          player.name = p.name;
+          player.isHost = p.isHost;
+        }
+      }
+      updateLobbyUI();
+    })
+    .on('presence', { event: 'join' }, () => { updateLobbyUI(); })
+    .on('presence', { event: 'leave' }, ({ key }) => {
+      const p = lobby.players.get(key);
+      if(p && p.mesh){ scene.remove(p.mesh); p.mesh.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); }); }
+      lobby.players.delete(key);
+      updateLobbyUI();
+    })
+    .on('broadcast', { event: 'player_state' }, ({ payload }) => handleRemotePlayerState(payload))
+    .on('broadcast', { event: 'enemy_state' }, ({ payload }) => handleEnemyState(payload))
+    .on('broadcast', { event: 'enemy_hit' }, ({ payload }) => handleEnemyHit(payload))
+    .on('broadcast', { event: 'player_damage' }, ({ payload }) => handlePlayerDamage(payload))
+    .on('broadcast', { event: 'start_game' }, () => { if(!G.gameStarted) startGame(); })
+    .on('broadcast', { event: 'game_over' }, () => { if(!G.gameOver && G.gameStarted) gameOver(); });
+
+  await lobby.channel.subscribe(async (status) => {
+    if(status === 'SUBSCRIBED'){
+      await lobby.channel.track({ name: lobby.myName, isHost: lobby.isHost, x: PLAYER.pos.x, z: PLAYER.pos.z });
+      document.getElementById('lobby-code-val').textContent = lobby.code;
+      document.getElementById('lobby').classList.add('show');
+      document.getElementById('start').classList.remove('show');
+      updateLobbyUI();
+    }
+  });
+}
+function leaveLobby(){
+  if(lobby.channel){
+    try{ lobby.channel.unsubscribe(); }catch(e){}
+    lobby.channel = null;
+  }
+  for(const p of lobby.players.values()){
+    if(p.mesh){ scene.remove(p.mesh); p.mesh.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); }); }
+  }
+  lobby.players.clear();
+  lobby.active = false;
+  lobby.code = null;
+  lobby.isHost = false;
+  document.getElementById('lobby').classList.remove('show');
+  document.getElementById('start').classList.add('show');
+}
+function handleRemotePlayerState(payload){
+  if(payload.id === lobby.myId) return;
+  let p = lobby.players.get(payload.id);
+  if(!p){
+    p = { id: payload.id, name: payload.name, isHost: false, pos: new THREE.Vector3(payload.x, payload.y, payload.z), targetPos: new THREE.Vector3(payload.x, payload.y, payload.z), targetYaw: payload.yaw||0, hp: payload.hp, mesh: null, lastSeen: Date.now() };
+    lobby.players.set(payload.id, p);
+    updateLobbyUI();
+  } else {
+    if(!p.targetPos) p.targetPos = new THREE.Vector3();
+    p.targetPos.set(payload.x, payload.y, payload.z);
+    p.targetYaw = payload.yaw || 0;
+    p.hp = payload.hp;
+    p.lastSeen = Date.now();
+  }
+  if(G.gameStarted && !p.mesh){
+    p.mesh = buildRemotePlayer(p.name, hashColor(p.id));
+    p.mesh.position.copy(p.pos);
+    scene.add(p.mesh);
+  }
+}
+function handleEnemyState({ enemies: data, wave }){
+  if(!lobby.active || lobby.isHost) return;
+  if(G.wave !== wave){ G.wave = wave; updateHUD(); }
+  const seen = new Set();
+  for(const ed of data){
+    seen.add(ed.id);
+    let e = enemies.find(x => x.netId === ed.id);
+    if(!e){
+      const model = ed.isBoss ? buildBossModel(ed.kind) : buildEnemyModel(ed.typeIdx);
+      model.position.set(ed.x, ed.y, ed.z);
+      scene.add(model);
+      const type = ed.isBoss ? BOSS_TYPES[ed.kind] : ENEMY_TYPES[ed.typeIdx];
+      const bar = document.createElement('div'); bar.className = 'ehp';
+      bar.innerHTML = '<div class="ehp-bar"><div class="ehp-fill" style="width:100%"></div></div>';
+      document.body.appendChild(bar);
+      e = { group: model, hp: ed.hp, maxHp: ed.maxHp, type, typeIdx: ed.typeIdx, kind: ed.kind, isBoss: ed.isBoss, dead: false, bar, attackCd: 0, bobPhase: 0, netId: ed.id, targetPos: new THREE.Vector3(ed.x, ed.y, ed.z) };
+      enemies.push(e);
+    }
+    e.targetPos = new THREE.Vector3(ed.x, ed.y, ed.z);
+    e.hp = ed.hp; e.maxHp = ed.maxHp;
+  }
+  for(let i = enemies.length - 1; i >= 0; i--){
+    if(!seen.has(enemies[i].netId)){
+      const e = enemies[i];
+      e.dead = true;
+      if(e.bar){ e.bar.style.opacity = 0; setTimeout(() => e.bar.remove(), 300); }
+      const pos = e.group.position.clone(); pos.y += 1.2;
+      spawnParticles(pos, 0xc81e3a, 25);
+      scene.remove(e.group);
+      e.group.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
+      enemies.splice(i, 1);
+    }
+  }
+}
+function handleEnemyHit({ enemyId, damage }){
+  if(!lobby.isHost) return;
+  const e = enemies.find(x => x.netId === enemyId);
+  if(!e || e.dead) return;
+  if(e.isBoss){
+    e.hp = Math.max(0, e.hp - damage);
+    const pos = e.group.position.clone(); pos.y += 2;
+    spawnParticles(pos, 0xc81e3a, 20); spawnParticles(pos, 0xffd000, 10);
+    sfx.hit(); addShake(3);
+    if(e.hp <= 0) killEnemy(e, true);
+  } else {
+    killEnemy(e, true);
+  }
+}
+function handlePlayerDamage({ targetId, dmg }){
+  if(targetId !== lobby.myId) return;
+  applyDamageLocal(dmg);
+}
+function applyDamageLocal(dmg){
+  if(G.gameOver) return;
+  if(blocking){
+    showToast(true, `<b>🛡 Блок!</b>\nУрон поглощён (${dmg})`);
+    sfx.good(); addShake(1.2);
+    return;
+  }
+  G.playerHp = Math.max(0, G.playerHp - dmg); updateHUD();
+  const f = document.getElementById('damage-flash');
+  f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 120);
+  addShake(2.5); sfx.hurt();
+  if(G.playerHp <= 0){
+    if(lobby.active && lobby.isHost && lobby.channel){
+      lobby.channel.send({ type: 'broadcast', event: 'game_over', payload: {} });
+    }
+    gameOver();
+  }
+}
+function broadcastPlayerState(dt){
+  if(!lobby.active || !lobby.channel) return;
+  lobby.playerBroadcastT += dt;
+  if(lobby.playerBroadcastT < 0.1) return;
+  lobby.playerBroadcastT = 0;
+  lobby.channel.send({
+    type: 'broadcast', event: 'player_state',
+    payload: { id: lobby.myId, name: lobby.myName, x: PLAYER.pos.x, y: PLAYER.pos.y, z: PLAYER.pos.z, yaw: yaw, hp: G.playerHp }
+  });
+}
+function broadcastEnemyState(dt){
+  if(!lobby.active || !lobby.isHost || !lobby.channel) return;
+  lobby.enemyBroadcastT += dt;
+  if(lobby.enemyBroadcastT < 0.1) return;
+  lobby.enemyBroadcastT = 0;
+  const data = enemies.filter(e => !e.dead).map(e => ({
+    id: e.netId, typeIdx: e.typeIdx, kind: e.kind, isBoss: e.isBoss,
+    x: e.group.position.x, y: e.group.position.y, z: e.group.position.z,
+    hp: e.hp, maxHp: e.maxHp
+  }));
+  lobby.channel.send({ type: 'broadcast', event: 'enemy_state', payload: { enemies: data, wave: G.wave }});
+}
+function updateRemotePlayers(dt){
+  for(const p of lobby.players.values()){
+    if(p.id === lobby.myId) continue;
+    if(!p.mesh && G.gameStarted){
+      p.mesh = buildRemotePlayer(p.name, hashColor(p.id));
+      p.mesh.position.copy(p.pos);
+      scene.add(p.mesh);
+    }
+    if(p.mesh && p.targetPos){
+      p.mesh.position.lerp(p.targetPos, Math.min(1, dt * 15));
+    }
+    if(p.mesh && p.targetYaw !== undefined){
+      let diff = p.targetYaw - p.mesh.rotation.y;
+      while(diff > Math.PI) diff -= Math.PI * 2;
+      while(diff < -Math.PI) diff += Math.PI * 2;
+      p.mesh.rotation.y += diff * Math.min(1, dt * 10);
+    }
+  }
+}
+
+/* ================== START FLOW ================== */
+function startGame(){
+  document.getElementById('start').classList.remove('show');
+  document.getElementById('lobby').classList.remove('show');
+  document.getElementById('user-badge').classList.remove('show');
+  document.getElementById('hud').classList.add('show');
+  document.getElementById('crosshair').classList.add('show');
+  G.gameStarted = true; G.gameOver = false; G.paused = false;
+  PLAYER.pos.set(0, 0, 20); PLAYER.vel.set(0, 0, 0);
+  G.playerHp = G.maxHp; G.score = 0; G.combo = 0; G.bestCombo = 0;
+  G.correct = 0; G.total = 0; G.wave = 0; G.pool = [];
+  for(const e of enemies){ scene.remove(e.group); if(e.bar) e.bar.remove(); }
+  enemies.length = 0;
+  updateHUD();
+  if(!lobby.active || lobby.isHost){ spawnWave(1); }
+  if(lobby.active){
+    for(const p of lobby.players.values()){
+      if(p.id === lobby.myId) continue;
+      if(!p.mesh){ p.mesh = buildRemotePlayer(p.name, hashColor(p.id)); p.mesh.position.copy(p.pos); scene.add(p.mesh); }
+    }
+  }
+  canvas.requestPointerLock?.();
+  setTimeout(updateClickHint, 300);
+}
 
 /* ================== CONTROLS ================== */
 const keys = { forward:false, back:false, left:false, right:false };
@@ -1306,10 +1509,7 @@ document.addEventListener('keyup', e => {
   if(e.code === 'KeyD' || e.code === 'ArrowRight') keys.right   = false;
 }, {capture:true});
 
-window.addEventListener('blur', () => {
-  keys.forward = keys.back = keys.left = keys.right = false;
-  jumpRequested = false; dashRequested = false; blocking = false;
-});
+window.addEventListener('blur', () => { keys.forward = keys.back = keys.left = keys.right = false; jumpRequested = false; dashRequested = false; blocking = false; });
 
 document.addEventListener('mousemove', e => {
   if(document.pointerLockElement !== canvas) return;
@@ -1347,20 +1547,13 @@ function showPauseMenu(){ pauseEl.classList.add('show'); G.paused = true; blocki
 function hidePauseMenu(){ pauseEl.classList.remove('show'); G.paused = false; canvas.requestPointerLock?.(); setTimeout(updateClickHint, 300); }
 document.getElementById('resume-btn').addEventListener('click', hidePauseMenu);
 document.getElementById('logout-btn').addEventListener('click', () => {
+  if(lobby.active) leaveLobby();
   localStorage.removeItem('eduknife_user');
   location.reload();
 });
-
-document.getElementById('sens').addEventListener('input', e => {
-  G.sens = parseFloat(e.target.value); document.getElementById('sens-val').textContent = G.sens.toFixed(1);
-});
-document.getElementById('vol').addEventListener('input', e => {
-  G.volume = parseFloat(e.target.value); document.getElementById('vol-val').textContent = Math.round(G.volume*100) + '%';
-});
-document.getElementById('shadows').addEventListener('change', e => {
-  renderer.shadowMap.enabled = e.target.checked;
-  scene.traverse(o => { if(o.isMesh && o.material) o.material.needsUpdate = true; });
-});
+document.getElementById('sens').addEventListener('input', e => { G.sens = parseFloat(e.target.value); document.getElementById('sens-val').textContent = G.sens.toFixed(1); });
+document.getElementById('vol').addEventListener('input', e => { G.volume = parseFloat(e.target.value); document.getElementById('vol-val').textContent = Math.round(G.volume*100) + '%'; });
+document.getElementById('shadows').addEventListener('change', e => { renderer.shadowMap.enabled = e.target.checked; scene.traverse(o => { if(o.isMesh && o.material) o.material.needsUpdate = true; }); });
 document.getElementById('particles-toggle').addEventListener('change', e => { particlesEnabled = e.target.checked; });
 
 /* ================== COLLISIONS ================== */
@@ -1393,7 +1586,7 @@ function resolveCollisions(dt){
   }
 }
 
-/* ================== UPDATE ================== */
+/* ================== PLAYER UPDATE ================== */
 function updatePlayer(dt){
   if(dashCdLeft > 0) dashCdLeft -= dt;
   if(dashTimeLeft > 0) dashTimeLeft -= dt;
@@ -1406,11 +1599,7 @@ function updatePlayer(dt){
   if(keys.right) wish.add(right);
   if(keys.left) wish.sub(right);
   if(wish.lengthSq() > 0) wish.normalize();
-
-  if(jumpRequested){
-    if(PLAYER.onGround){ PLAYER.vel.y = JUMP_VELOCITY; PLAYER.onGround = false; slideTimeLeft = 0; }
-    jumpRequested = false;
-  }
+  if(jumpRequested){ if(PLAYER.onGround){ PLAYER.vel.y = JUMP_VELOCITY; PLAYER.onGround = false; slideTimeLeft = 0; } jumpRequested = false; }
   if(dashRequested){
     if(dashCdLeft <= 0 && dashTimeLeft <= 0){
       const dir = wish.lengthSq() > 0 ? wish.clone() : forward.clone();
@@ -1429,8 +1618,7 @@ function updatePlayer(dt){
     PLAYER.vel.z += (targetZ - PLAYER.vel.z) * lerp;
   }
   if(slideTimeLeft > 0){
-    PLAYER.vel.x *= 1 - 1.5 * dt;
-    PLAYER.vel.z *= 1 - 1.5 * dt;
+    PLAYER.vel.x *= 1 - 1.5 * dt; PLAYER.vel.z *= 1 - 1.5 * dt;
     slideTimeLeft -= dt;
     if(!PLAYER.onGround) slideTimeLeft = 0;
   }
@@ -1456,21 +1644,37 @@ function updatePlayer(dt){
   camera.rotation.x = pitch + sy;
   camera.rotation.z = bobRoll + sz + (slideTimeLeft > 0 ? 0.18 : 0);
   if(fovKick > 0.01){
-    camera.fov = 75 + fovKick;
-    camera.updateProjectionMatrix();
+    camera.fov = 75 + fovKick; camera.updateProjectionMatrix();
     fovKick *= Math.pow(0.001, dt);
     if(fovKick < 0.01){ fovKick = 0; camera.fov = 75; camera.updateProjectionMatrix(); }
   }
 }
-
 function updateEnemies(dt){
+  if(lobby.active && !lobby.isHost){
+    for(const e of enemies){
+      if(e.dead) continue;
+      if(e.targetPos) e.group.position.lerp(e.targetPos, Math.min(1, dt * 12));
+    }
+    return;
+  }
+  const playersList = [{ id: lobby.active ? lobby.myId : 'local', isLocal: true, pos: PLAYER.pos }];
+  if(lobby.active){
+    for(const [id, p] of lobby.players){
+      if(id === lobby.myId) continue;
+      playersList.push({ id, isLocal: false, pos: p.targetPos || p.pos });
+    }
+  }
   for(const e of enemies){
     if(e.dead) continue;
-    const toP = new THREE.Vector3().subVectors(camera.position, e.group.position);
-    toP.y = 0;
-    const dist = toP.length();
-    if(dist > 0.1){
-      const targetAngle = Math.atan2(toP.x, toP.z);
+    let nearest = null, nearestDist = Infinity;
+    for(const p of playersList){
+      const dx = p.pos.x - e.group.position.x;
+      const dz = p.pos.z - e.group.position.z;
+      const d = Math.sqrt(dx*dx + dz*dz);
+      if(d < nearestDist){ nearest = p; nearestDist = d; }
+    }
+    if(nearest && nearestDist > 0.1){
+      const targetAngle = Math.atan2(nearest.pos.x - e.group.position.x, nearest.pos.z - e.group.position.z);
       let diff = targetAngle - e.group.rotation.y;
       while(diff > Math.PI) diff -= Math.PI * 2;
       while(diff < -Math.PI) diff += Math.PI * 2;
@@ -1478,17 +1682,23 @@ function updateEnemies(dt){
     }
     const aggroRange = e.isBoss ? 30 : 25;
     const attackRange = e.isBoss ? 3.5 : 2.2;
-    if(dist > attackRange && dist < aggroRange){
-      const dir = toP.normalize();
-      e.group.position.addScaledVector(dir, e.type.speed * dt);
+    if(nearest && nearestDist > attackRange && nearestDist < aggroRange){
+      const dirX = (nearest.pos.x - e.group.position.x) / nearestDist;
+      const dirZ = (nearest.pos.z - e.group.position.z) / nearestDist;
+      e.group.position.x += dirX * e.type.speed * dt;
+      e.group.position.z += dirZ * e.type.speed * dt;
       enemyResolveCollisions(e);
       e.bobPhase += dt * 8;
       if(!e.isBoss) e.group.position.y = Math.abs(Math.sin(e.bobPhase)) * 0.08;
     }
     e.attackCd -= dt;
-    if(dist < attackRange && e.attackCd <= 0){
+    if(nearest && nearestDist < attackRange && e.attackCd <= 0){
       e.attackCd = e.isBoss ? 2.0 : 2.5;
-      damagePlayer(e.type.dmg);
+      if(nearest.isLocal){
+        damagePlayer(e.type.dmg);
+      } else if(lobby.channel){
+        lobby.channel.send({ type: 'broadcast', event: 'player_damage', payload: { targetId: nearest.id, dmg: e.type.dmg }});
+      }
       e.group.rotation.x = 0.3;
       setTimeout(() => { if(!e.dead) e.group.rotation.x = 0; }, 200);
     }
@@ -1516,20 +1726,9 @@ function updateEnemyBars(){
   }
 }
 
-/* ================== DAMAGE ================== */
 function damagePlayer(dmg){
   if(G.gameOver) return;
-  if(blocking){
-    showToast(true, `<b>🛡 Блок!</b>\nУрон поглощён (${dmg})`);
-    sfx.good();
-    addShake(1.2);
-    return;
-  }
-  G.playerHp = Math.max(0, G.playerHp - dmg); updateHUD();
-  const f = document.getElementById('damage-flash');
-  f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 120);
-  addShake(2.5); sfx.hurt();
-  if(G.playerHp <= 0) gameOver(false);
+  applyDamageLocal(dmg);
 }
 
 /* ================== ATTACK ================== */
@@ -1559,7 +1758,9 @@ function tryAttack(){
 
 /* ================== QUESTION ================== */
 function pickQuestion(){
-  if(G.pool.length === 0) G.pool = [...QUESTIONS].sort(() => Math.random() - 0.5);
+  if(G.pool.length === 0){
+    G.pool = [...QUESTIONS].sort(() => Math.random() - 0.5);
+  }
   const raw = G.pool.pop();
   const idx = raw.o.map((_,i) => i);
   const sh = [...idx].sort(() => Math.random() - 0.5);
@@ -1590,10 +1791,7 @@ function openQuestion(){
 function updateTimerUI(){
   const pct = (G.timeLeft/QTIME)*100;
   document.getElementById('tfill').style.width = pct + '%';
-  document.getElementById('tfill').style.background = pct > 50
-    ? 'linear-gradient(90deg,#7ee787,#ffb347)'
-    : pct > 25 ? 'linear-gradient(90deg,#ffb347,#ff7b00)'
-               : 'linear-gradient(90deg,#ff7b00,#ff2d55)';
+  document.getElementById('tfill').style.background = pct > 50 ? 'linear-gradient(90deg,#7ee787,#d4a574)' : pct > 25 ? 'linear-gradient(90deg,#d4a574,#ff7b00)' : 'linear-gradient(90deg,#ff7b00,#c81e3a)';
   const t = document.getElementById('qtimer');
   t.textContent = Math.ceil(G.timeLeft);
   t.classList.toggle('warn', G.timeLeft < 5);
@@ -1617,37 +1815,40 @@ function answer(idx){
     if(i === idx && !ok) b.classList.add('wrong');
   });
   document.getElementById('question').classList.remove('show');
-  G.q = null;
-  G.paused = false;
+  G.q = null; G.paused = false;
   canvas.requestPointerLock?.();
-
   if(ok){
     showToast(true, `<b>✅ Верно!</b>\n${expl}`);
-    sfx.good();
-    startSwing(); sfx.slash();
+    sfx.good(); startSwing(); sfx.slash();
     G.combo++; G.bestCombo = Math.max(G.bestCombo, G.combo);
     updateHUD();
     setTimeout(() => {
       if(G.target && !G.target.dead){
-        if(G.target.isBoss) damageBoss(G.target, 100);
-        else killEnemy(G.target);
+        if(lobby.active && lobby.channel){
+          lobby.channel.send({ type: 'broadcast', event: 'enemy_hit', payload: { enemyId: G.target.netId, damage: 100, killerId: lobby.myId } });
+          const pos = G.target.group.position.clone(); pos.y += 1.2;
+          spawnParticles(pos, 0xc81e3a, 20); spawnParticles(pos, 0xffd000, 10);
+          sfx.hit(); addShake(3);
+          if(lobby.isHost){
+            handleEnemyHit({ enemyId: G.target.netId, damage: 100, killerId: lobby.myId });
+          }
+        } else {
+          if(G.target.isBoss) damageBoss(G.target, 100);
+          else killEnemy(G.target);
+        }
       }
       G.target = null;
-      checkWaveComplete();
+      if(!lobby.active || lobby.isHost) checkWaveComplete();
     }, 300);
   } else {
     showToast(false, `<b>❌ Неверно.</b> Правильно: <b>${correctText}</b>\n${expl}`);
     sfx.bad();
     G.combo = 0; updateHUD();
     setTimeout(() => {
-      G.playerHp = Math.max(0, G.playerHp - ((G.target && G.target.isBoss ? 18 : 10) + Math.floor(Math.random()*8)));
-      updateHUD();
-      const f = document.getElementById('damage-flash');
-      f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 120);
-      addShake(2.5); sfx.hurt();
-      if(G.playerHp <= 0) gameOver(false);
+      const dmg = (G.target && G.target.isBoss ? 18 : 10) + Math.floor(Math.random()*8);
+      applyDamageLocal(dmg);
       G.target = null;
-      checkWaveComplete();
+      if(!lobby.active || lobby.isHost) checkWaveComplete();
     }, 250);
   }
   setTimeout(updateClickHint, 300);
@@ -1658,7 +1859,7 @@ function damageBoss(boss, dmg){
   boss.hp = Math.max(0, boss.hp - dmg);
   addShake(3); addFovKick(8); sfx.hit();
   const pos = boss.group.position.clone(); pos.y += 2;
-  spawnParticles(pos, 0xff2d55, 20); spawnParticles(pos, 0xffd000, 10);
+  spawnParticles(pos, 0xc81e3a, 20); spawnParticles(pos, 0xffd000, 10);
   updateHUD();
   if(boss.hp <= 0) killBoss(boss);
 }
@@ -1666,7 +1867,7 @@ function killBoss(boss){
   if(boss.dead) return;
   boss.dead = true;
   const pos = boss.group.position.clone(); pos.y += 2;
-  spawnParticles(pos, 0xff2d55, 60); spawnParticles(pos, 0xffd000, 40);
+  spawnParticles(pos, 0xc81e3a, 60); spawnParticles(pos, 0xffd000, 40);
   G.score += 1000 + G.wave * 100; updateHUD(); sfx.win(); addShake(6);
   boss.bar.style.opacity = 0; setTimeout(() => boss.bar.remove(), 300);
   const startScale = boss.group.scale.x, dur = 1200, t0 = performance.now();
@@ -1680,12 +1881,13 @@ function killBoss(boss){
   }
   anim();
 }
-function killEnemy(e){
+function killEnemy(e, fromNetwork){
   if(e.dead) return;
   e.dead = true;
   const pos = e.group.position.clone(); pos.y += 1.2;
-  spawnParticles(pos, 0xff2d55, 30); spawnParticles(pos, 0xffd000, 15);
-  G.score += 100 + G.wave * 20 + G.bestCombo * 5; updateHUD(); sfx.hit(); addShake(3); addFovKick(6);
+  spawnParticles(pos, 0xc81e3a, 30); spawnParticles(pos, 0xffd000, 15);
+  G.score += 100 + G.wave * 20 + G.bestCombo * 5; updateHUD();
+  if(!fromNetwork){ sfx.hit(); addShake(3); addFovKick(6); }
   e.bar.style.opacity = 0; setTimeout(() => e.bar.remove(), 300);
   const startY = e.group.position.y, startRot = e.group.rotation.z, dur = 700, t0 = performance.now();
   function anim(){
@@ -1698,8 +1900,8 @@ function killEnemy(e){
   }
   anim();
 }
-
 function checkWaveComplete(){
+  if(lobby.active && !lobby.isHost) return;
   if(enemies.filter(e => !e.dead).length > 0) return;
   G.score += 200;
   G.playerHp = G.maxHp;
@@ -1725,17 +1927,17 @@ function winGame(){
   document.getElementById('crosshair').classList.remove('show');
   setTimeout(showOutro, 400);
 }
-function gameOver(win){
+function gameOver(){
   if(G.gameOver) return;
   G.gameOver = true; G.paused = true; document.exitPointerLock?.();
-  document.getElementById('go-title').textContent = '💀 ПОРАЖЕНИЕ';
+  document.getElementById('go-title').textContent = '💀 Поражение';
   document.getElementById('go-sub').textContent = 'Знания — твой щит. Попробуй ещё раз';
   const acc = G.total ? Math.round(G.correct/G.total*100) : 0;
   document.getElementById('go-stats').innerHTML = `
     <div class="gs"><div class="v">${G.score}</div><div class="l">Очки</div></div>
     <div class="gs"><div class="v">${Math.max(0,G.wave)}</div><div class="l">Волн</div></div>
     <div class="gs"><div class="v">${acc}%</div><div class="l">Точность</div></div>
-    <div class="gs"><div class="v">x${G.bestCombo}</div><div class="l">Лучшая серия</div></div>
+    <div class="gs"><div class="v">x${G.bestCombo}</div><div class="l">Серия</div></div>
   `;
   document.getElementById('gameover').classList.add('show');
   sfx.die();
@@ -1769,7 +1971,7 @@ const sfx = {
   dash: () => { tone(300, 0.15, 'sawtooth', 0.05, 900); tone(200, 0.1, 'square', 0.04, 400); }
 };
 
-/* ================== MAIN LOOP ================== */
+/* ================== LOOP ================== */
 let lastT = performance.now();
 function loop(){
   const now = performance.now();
@@ -1780,6 +1982,9 @@ function loop(){
     updatePlayer(dt);
     updateEnemies(dt);
     updateParticles(dt);
+    updateRemotePlayers(dt);
+    broadcastPlayerState(dt);
+    broadcastEnemyState(dt);
   }
   updateSwordAnimation(dt);
   updateTorches(t);
@@ -1788,72 +1993,103 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-/* ================== START ================== */
+/* ================== INIT ================== */
 buildArena();
 requestAnimationFrame(loop);
 
-document.getElementById('start-btn').addEventListener('click', () => {
-  document.getElementById('start').classList.remove('show');
-  document.getElementById('user-badge').classList.remove('show');
-  document.getElementById('hud').classList.add('show');
-  document.getElementById('crosshair').classList.add('show');
-  G.gameStarted = true;
-  G.gameOver = false;
-  G.paused = false;
-  G.playerHp = G.maxHp;
-  G.score = 0; G.wave = 0; G.combo = 0; G.bestCombo = 0;
-  G.correct = 0; G.total = 0; G.pool = [];
-  for(const e of enemies){
-    scene.remove(e.group);
-    e.bar.remove();
+/* ================== MENU PARTICLES ================== */
+let menuParticlesStarted = false;
+function initMenuParticles(){
+  if(menuParticlesStarted) return;
+  menuParticlesStarted = true;
+  const c = document.getElementById('menu-bg');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  let W, H;
+  const parts = [];
+  function resize(){ W = c.width = innerWidth; H = c.height = innerHeight; }
+  resize(); addEventListener('resize', resize);
+  for(let i=0;i<55;i++) parts.push({
+    x: Math.random()*W, y: Math.random()*H,
+    vx: (Math.random()-0.5)*0.22, vy: (Math.random()-0.5)*0.22,
+    r: 0.8 + Math.random()*1.5,
+    hue: Math.random() > 0.6 ? '212,165,116' : (Math.random() > 0.5 ? '255,140,80' : '150,120,200'),
+    a: 0.25 + Math.random()*0.45
+  });
+  function draw(){
+    const menuVisible = document.getElementById('start').classList.contains('show');
+    if(!menuVisible){ requestAnimationFrame(draw); return; }
+    ctx.fillStyle = 'rgba(5,3,12,0.15)'; ctx.fillRect(0,0,W,H);
+    for(let i=0;i<parts.length;i++){
+      for(let j=i+1;j<parts.length;j++){
+        const dx = parts[i].x - parts[j].x, dy = parts[i].y - parts[j].y;
+        const d2 = dx*dx + dy*dy;
+        if(d2 < 14000){
+          ctx.strokeStyle = `rgba(212,165,116,${(1 - d2/14000) * 0.12})`;
+          ctx.lineWidth = 0.5;
+          ctx.beginPath(); ctx.moveTo(parts[i].x, parts[i].y); ctx.lineTo(parts[j].x, parts[j].y); ctx.stroke();
+        }
+      }
+    }
+    for(const p of parts){
+      p.x += p.vx; p.y += p.vy;
+      if(p.x < 0) p.x = W; if(p.x > W) p.x = 0;
+      if(p.y < 0) p.y = H; if(p.y > H) p.y = 0;
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6);
+      grad.addColorStop(0, `rgba(${p.hue},${p.a})`);
+      grad.addColorStop(1, `rgba(${p.hue},0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 6, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = `rgba(${p.hue},${Math.min(1, p.a + .2)})`;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    }
+    requestAnimationFrame(draw);
   }
-  enemies.length = 0;
-  PLAYER.pos.set(0, 0, 20);
-  PLAYER.vel.set(0, 0, 0);
-  yaw = 0; pitch = 0;
-  canvas.requestPointerLock?.();
-  spawnWave(1);
-  updateHUD();
+  draw();
+}
+
+/* ================== MENU BUTTONS ================== */
+document.getElementById('start-btn').addEventListener('click', () => { startGame(); });
+document.getElementById('lobby-create-btn').addEventListener('click', async () => { await createLobby(); });
+document.getElementById('lobby-join-toggle').addEventListener('click', () => {
+  const joinRow = document.getElementById('menu-join');
+  joinRow.classList.toggle('show');
+  if(joinRow.classList.contains('show')) setTimeout(() => document.getElementById('lobby-code-inp').focus(), 100);
 });
+document.getElementById('lobby-join-btn').addEventListener('click', async () => {
+  const code = document.getElementById('lobby-code-inp').value.trim().toUpperCase();
+  if(code.length !== 6){ alert('Код должен быть 6 символов'); return; }
+  await joinLobbyAsClient(code);
+});
+document.getElementById('lobby-code-inp').addEventListener('keydown', e => {
+  if(e.key === 'Enter') document.getElementById('lobby-join-btn').click();
+});
+document.getElementById('copy-code-btn').addEventListener('click', () => {
+  if(!lobby.code) return;
+  navigator.clipboard?.writeText(lobby.code).then(() => {
+    const btn = document.getElementById('copy-code-btn');
+    const old = btn.textContent; btn.textContent = '✓';
+    setTimeout(() => { btn.textContent = old; }, 1200);
+  });
+});
+document.getElementById('lobby-start-game').addEventListener('click', () => {
+  if(!lobby.isHost) return;
+  lobby.channel.send({ type: 'broadcast', event: 'start_game', payload: {} });
+  startGame();
+});
+document.getElementById('lobby-leave-btn').addEventListener('click', () => { leaveLobby(); });
 
 document.getElementById('go-btn').addEventListener('click', () => {
   document.getElementById('gameover').classList.remove('show');
-  document.getElementById('start').classList.add('show');
-  document.getElementById('user-badge').classList.add('show');
-  G.gameStarted = false;
-  G.gameOver = false;
-  document.getElementById('hud').classList.remove('show');
-  document.getElementById('crosshair').classList.remove('show');
-});
-
-/* ================== AUTO-LOGIN (SUPABASE) ================== */
-(async function init(){
-  try{
-    const saved = localStorage.getItem('eduknife_user');
-    if(saved){
-      try{
-        const u = JSON.parse(saved);
-        const { data } = await supabaseClient
-          .from('players')
-          .select('*')
-          .eq('username', u.login)
-          .maybeSingle(); // ИСПРАВЛЕНО ЗДЕСЬ
-
-        if(data){
-          currentUser = { id: data.id, login: data.username };
-        }
-      }catch(e){}
-    }
-    if(currentUser){
-      document.getElementById('auth').style.display = 'none';
-      document.getElementById('user-badge').classList.add('show');
-      document.getElementById('user-badge').innerHTML = '🧙 <b>' + escapeHtml(currentUser.login) + '</b>';
-      document.getElementById('start').classList.add('show');
-    }
-  }catch(e){
-    console.error('Ошибка БД:', e);
+  G.gameOver = false; G.paused = false; G.gameStarted = false;
+  if(lobby.active){
+    document.getElementById('lobby').classList.add('show');
+    document.getElementById('user-badge').classList.add('show');
+  } else {
+    document.getElementById('start').classList.add('show');
+    document.getElementById('user-badge').classList.add('show');
   }
-})();
+});
 </script>
 </body>
 </html>
